@@ -29,7 +29,6 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
                 AuthenticationBean authenticationBean = mapper.readValue(is,AuthenticationBean.class);
                 authRequest = new UsernamePasswordAuthenticationToken(
                         authenticationBean.getUsername(), authenticationBean.getPassword());
-                System.out.println("wa, " + authenticationBean.getUsername() + ", " + authenticationBean.getPassword());
             }catch (IOException e) {
                 e.printStackTrace();
                 authRequest = new UsernamePasswordAuthenticationToken(
