@@ -30,6 +30,9 @@ public class UserService implements IUserService {
         List<String> roles = new ArrayList<>();
         roles.add("ROLE_USER");
         user.setRoles(roles);
+        user.setWinCount(0);
+        user.setTotalPlay(0);
+        user.setExp(0);
         return userRepository.save(user);
     }
 }

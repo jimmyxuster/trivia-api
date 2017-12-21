@@ -18,7 +18,7 @@ public class UserController {
 
     @Secured({"ROLE_USER"})
     @RequestMapping(value = "/user/{username}", method = RequestMethod.GET)
-    public RestResponse getUserInfo(@PathVariable String username, HttpServletRequest request) {
+    public RestResponse getUserInfo(@PathVariable String username) {
         User user = userService.getUserInfo(username);
         if (user == null) {
             return RestResponse.bad(-10010, "用户不存在");
