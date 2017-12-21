@@ -13,12 +13,13 @@ import javax.servlet.http.HttpServletRequest;
 @RestController
 public class UserController {
 
+
     @Autowired
     IUserService userService;
 
     @Secured({"ROLE_USER"})
     @RequestMapping(value = "/user/{username}", method = RequestMethod.GET)
-    public RestResponse getUserInfo(@PathVariable String username, HttpServletRequest request) {
+    public RestResponse getUserInfo(@PathVariable String username) {
         User user = userService.getUserInfo(username);
         if (user == null) {
             return RestResponse.bad(-10010, "用户不存在");
@@ -44,6 +45,8 @@ public class UserController {
         if (user.getUsername() == null || user.getPassword() == null) {
             return RestResponse.bad(-10010, "用户名或密码为空");
         }
-        return RestResponse.good(userService.saveUser(user));
+        User savedUser = userService.saveUser(user);
+        return savedUser == null ? RestResponse.bad(-10011, "保存用户信息失败") :
+                RestResponse.good(savedUser);
     }
 }

@@ -3,11 +3,14 @@ package com.dummy.trivia.service.impl;
 import com.dummy.trivia.db.model.User;
 import com.dummy.trivia.db.repository.UserRepository;
 import com.dummy.trivia.service.IUserService;
+import com.dummy.trivia.util.FileUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +18,7 @@ import java.util.List;
 public class UserService implements IUserService {
 
     private static final BCryptPasswordEncoder ENCODER = new BCryptPasswordEncoder(4);
+    public static final String AVATAR_ROOT = "avatar-dir";
 
     @Autowired
     UserRepository userRepository;
@@ -30,6 +34,18 @@ public class UserService implements IUserService {
         List<String> roles = new ArrayList<>();
         roles.add("ROLE_USER");
         user.setRoles(roles);
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        if (savedUser != null) {
+            if (!StringUtils.isEmpty(user.getAvatarBase64())) {
+                try {
+                    FileUtil.base64ToFile(user.getAvatarBase64(), Paths.get(AVATAR_ROOT).toString(), user.getId());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    userRepository.delete(savedUser);
+                    savedUser = null;
+                }
+            }
+        }
+        return savedUser;
     }
 }

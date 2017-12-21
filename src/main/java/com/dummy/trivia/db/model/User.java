@@ -17,6 +17,9 @@ public class User extends BaseModel implements UserDetails {
     private String password;
     @Expose
     private String avatarUrl;
+    @Expose(serialize = false)
+    @Transient
+    private String avatarBase64;
 
     private List<String> roles;
 
@@ -49,6 +52,10 @@ public class User extends BaseModel implements UserDetails {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getAvatarBase64() {
+        return avatarBase64;
     }
 
     @Override
