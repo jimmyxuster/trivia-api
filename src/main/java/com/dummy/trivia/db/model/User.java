@@ -20,6 +20,12 @@ public class User extends BaseModel implements UserDetails {
     @Expose(serialize = false)
     @Transient
     private String avatarBase64;
+    @Expose
+    private int winCount;
+    @Expose
+    private int totalPlay;
+    @Expose
+    private int exp;
 
     private List<String> roles;
 
@@ -79,6 +85,42 @@ public class User extends BaseModel implements UserDetails {
         this.avatarUrl = avatarUrl;
     }
 
+    public int getWinCount() {
+        return winCount;
+    }
+
+    public void setWinCount(int winCount) {
+        this.winCount = winCount;
+    }
+
+    public void incrementWinCount() {
+        this.winCount++;
+    }
+
+    public int getTotalPlay() {
+        return totalPlay;
+    }
+
+    public void setTotalPlay(int totalPlay) {
+        this.totalPlay = totalPlay;
+    }
+
+    public void incrementTotalPlay() {
+        this.totalPlay++;
+    }
+
+    public int getExp() {
+        return exp;
+    }
+
+    public void setExp(int exp) {
+        this.exp = exp;
+    }
+
+    public void incrementExpBy(int value) {
+        this.exp += value;
+    }
+
     public List<String> getRoles() {
         return roles;
     }
@@ -97,6 +139,9 @@ public class User extends BaseModel implements UserDetails {
                 "username='" + username + '\'' +
                 ", password='" + password + '\'' +
                 ", avatarUrl='" + avatarUrl + '\'' +
+                ", winCount=" + winCount +
+                ", totalPlay=" + totalPlay +
+                ", exp=" + exp +
                 ", roles=" + roles +
                 ", authorities=" + authorities +
                 '}';
