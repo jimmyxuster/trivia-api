@@ -1,7 +1,7 @@
 package com.dummy.trivia.util;
 
 import org.springframework.http.MediaType;
-import sun.misc.BASE64Decoder;
+import org.springframework.util.Base64Utils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -16,7 +16,7 @@ public class FileUtil {
         if (base64Code.startsWith("data")) {
             String typeSuffix = getTypeSuffix(base64Code);
             File targetFile = createNewFile(targetPath, fileName, typeSuffix);
-            byte[] buffer = new BASE64Decoder().decodeBuffer(base64Code.substring(base64Code.indexOf(",") + 1));
+            byte[] buffer = Base64Utils.decodeFromString(base64Code.substring(base64Code.indexOf(",") + 1));
             FileOutputStream out = new FileOutputStream(targetFile);
             out.write(buffer);
             out.close();
