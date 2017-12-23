@@ -73,7 +73,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .logoutUrl("/logout")
                 .logoutSuccessHandler(new TriviaLogoutSuccessHandler())
                 .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID");
+                .deleteCookies("JSESSIONID")
+                .and().rememberMe().tokenValiditySeconds(1209600);
 
         //用重写的Filter替换掉原有的UsernamePasswordAuthenticationFilter
         http.addFilterAt(customAuthenticationFilter(),
