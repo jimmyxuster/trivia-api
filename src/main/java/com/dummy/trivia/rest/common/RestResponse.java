@@ -8,7 +8,7 @@ public class RestResponse {
     private int code;
 
     @Expose
-    private Object body;
+    private Object result;
 
     @Expose
     private String message;
@@ -18,9 +18,9 @@ public class RestResponse {
         this.message = message;
     }
 
-    private RestResponse(int code, Object body) {
+    private RestResponse(int code, Object result) {
         this.code = code;
-        this.body = body;
+        this.result = result;
         this.message = "";
     }
 
@@ -28,7 +28,7 @@ public class RestResponse {
         return new RestResponse(code, message);
     }
 
-    public static RestResponse good(Object body) {
-        return new RestResponse(0, body);
+    public static RestResponse good(Object result) {
+        return new RestResponse(0, result);
     }
 }
