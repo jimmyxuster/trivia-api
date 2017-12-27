@@ -5,8 +5,11 @@ import com.dummy.trivia.db.model.Question;
 import com.dummy.trivia.db.model.QuestionType;
 import com.dummy.trivia.db.repository.QuestionRepository;
 import com.dummy.trivia.service.IQuestionService;
+import com.google.gson.Gson;
+import org.codehaus.jackson.map.util.JSONPObject;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Collections;
 import java.util.List;
 
 public class QuestionService implements IQuestionService {
@@ -15,27 +18,25 @@ public class QuestionService implements IQuestionService {
     QuestionRepository questionRepository;
 
     @Override
-    public void showQuestionAndChoices(long id) {
-
-    }
-
-    @Override
-    public void showAnswer(Question question) {
-
+    public String getQuestionInfo(String id) {
+        Question question = questionRepository.findById(id);
+        Gson gson = new Gson();
+        return gson.toJson(question);
     }
 
     @Override
     public boolean correctlyAnswered(Player player, Question question) {
-        return false;
+        return true;
     }
 
     @Override
-    public void getQuestionsOfType(QuestionType type) {
-
+    public List<Question> getQuestionsOfType(String type) {
+        return questionRepository.findByType(type);
     }
 
     @Override
     public Question getRandomQuestion(List<Question> questions) {
-        return null;
+        Collections.shuffle(questions);
+        return questions.get(0);
     }
 }

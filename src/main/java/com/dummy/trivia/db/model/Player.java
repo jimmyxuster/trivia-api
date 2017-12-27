@@ -17,6 +17,11 @@ public class Player extends User {
         this.position = generateRandomInt(0, Game.BOARD_SIZE - 1);
     }
 
+    @Override
+    public String getUsername() {
+        return super.getUsername();
+    }
+
     public User getUser() {
         return user;
     }

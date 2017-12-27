@@ -8,13 +8,11 @@ import java.util.List;
 
 public interface IQuestionService {
 
-    void showQuestionAndChoices(long id);
-
-    void showAnswer(Question question);
+    String getQuestionInfo(String id);
 
     boolean correctlyAnswered(Player player, Question question);
 
-    void getQuestionsOfType(QuestionType type);
+    List<Question> getQuestionsOfType(String type);
 
     Question getRandomQuestion(List<Question> questions);
 }
