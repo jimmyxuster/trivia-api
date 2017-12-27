@@ -7,16 +7,12 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.GsonHttpMessageConverter;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+import org.springframework.web.servlet.config.annotation.*;
 
 import java.nio.file.Paths;
 import java.util.List;
 
 @Configuration
-@EnableWebMvc
 @ComponentScan
 public class WebMvcConfig extends WebMvcConfigurerAdapter { @Override
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
@@ -56,5 +52,11 @@ public class WebMvcConfig extends WebMvcConfigurerAdapter { @Override
         gsonConverter.setGson(gson);
 
         return gsonConverter;
+    }
+
+    @Override
+    //为ws.html提供路径映射
+    public void addViewControllers(ViewControllerRegistry registry) {
+        registry.addViewController("/ws").setViewName("/ws");
     }
 }
