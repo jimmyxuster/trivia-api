@@ -1,4 +1,4 @@
-package com.dummy.trivia.db.model;
+package com.dummy.trivia.db.model.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -1,111 +1,149 @@
 package com.dummy.trivia.socket;
 
-import com.dummy.trivia.db.model.base.BaseGameMessage;
-import com.dummy.trivia.db.model.type.GameMessageJsonHelper;
+import com.dummy.trivia.db.model.Player;
+import com.dummy.trivia.db.model.Question;
+import com.dummy.trivia.db.model.Room;
+import com.dummy.trivia.util.GameMessageJsonHelper;
+import com.google.gson.JsonObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import javax.websocket.*;
+import javax.websocket.OnClose;
+import javax.websocket.OnMessage;
+import javax.websocket.OnOpen;
+import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-@ServerEndpoint(value = "/websocket")
+/**
+ * 把今天最好的表现当作明天最新的起点．．～
+ * いま 最高の表現 として 明日最新の始発．．～
+ * Today the best performance  as tomorrow newest starter!
+ * Created by IntelliJ IDEA.
+ * <p>
+ *
+ * @author : xiaomo
+ * github: https://github.com/xiaomoinfo
+ * email: xiaomo@xiaomo.info
+ * <p>
+ * Date: 2016/11/3 16:36
+ * Description: 用户实体类
+ * Copyright(©) 2015 by xiaomo.
+ **/
+
+@ServerEndpoint("/websocket")
 @Component
 public class GameWebSocket {
 
-        //静态变量，用来记录当前在线连接数。应该把它设计成线程安全的。
-        private static int onlineCount = 0;
+//    private static DateFormat dateFormat = new SimpleDateFormat("HH:mm:SS");
+    private static final Logger LOGGER = LoggerFactory.getLogger(GameWebSocket.class);
+    private static int onlineCount = 0;
+    private static CopyOnWriteArraySet<GameWebSocket> webSocketSet = new CopyOnWriteArraySet<>();
+    private static List<Room> rooms = new ArrayList<>();
+    private Session session;
 
-        //concurrent包的线程安全Set，用来存放每个客户端对应的MyWebSocket对象。
-        private static CopyOnWriteArraySet<GameWebSocket> webSocketSet = new CopyOnWriteArraySet<>();
+    /**
+     * 获取在线人数
+     *
+     * @return 在线人数
+     */
+    private static synchronized int getOnlineCount() {
+        return GameWebSocket.onlineCount;
+    }
 
-        //与某个客户端的连接会话，需要通过它来给客户端发送数据
-        private Session session;
+    /**
+     * 添加在线人数
+     */
+    private static synchronized void addOnlineCount() {
+        GameWebSocket.onlineCount++;
+    }
 
-        /**
-         * 连接建立成功调用的方法*/
-        @OnOpen
-        public void onOpen(Session session) {
-            this.session = session;
-            webSocketSet.add(this);     //加入set中
-            addOnlineCount();           //在线数加1
-            System.out.println("有新连接加入！当前在线人数为" + getOnlineCount());
-            try {
-                sendMessage("hi");
-            } catch (IOException e) {
-                System.out.println("IO异常");
-            }
-        }
+    /**
+     * 减少在线人数
+     */
+    private static synchronized void subOnlineCount() {
+        GameWebSocket.onlineCount--;
+    }
 
-        /**
-         * 连接关闭调用的方法
-         */
-        @OnClose
-        public void onClose() {
-            webSocketSet.remove(this);  //从set中删除
-            subOnlineCount();           //在线数减1
-            System.out.println("有一连接关闭！当前在线人数为" + getOnlineCount());
-        }
+    /**
+     * 有人进入游戏
+     *
+     * @param session session
+     */
+    @OnOpen
+    public void onOpen(Session session) {
+        this.session = session;
+        webSocketSet.add(this);
+        addOnlineCount();
+        LOGGER.info("有新用户加入!当前在线人数为:{}", getOnlineCount());
+    }
 
-        /**
-         * 收到客户端消息后调用的方法
-         *
-         * @param message 客户端发送过来的消息*/
-        @OnMessage
-        public void onMessage(String message, Session session) {
-            // 解析GameMessage，这里拿String做个例子，实际可能是其他的实体类，GameMessageJsonHelper.fromJsonObject
-            // 两个参数，第一个是json string，第二个是BaseGameMessage的泛型，就是尖括号里面的那个类型参数
-            BaseGameMessage<String> msg = GameMessageJsonHelper.fromJsonObject(message, String.class);
-            System.out.println("来自客户端的消息:" + msg.getBody());
+    /**
+     * 有人离开游戏
+     */
+    @OnClose
+    public void onClose() {
+        webSocketSet.remove(this);
+        subOnlineCount();
+        System.out.println("有一用户关闭!当前在线人数为" + getOnlineCount());
+    }
 
-            //群发消息
-            for (GameWebSocket item : webSocketSet) {
-                try {
-                    item.sendMessage(message);
-                } catch (IOException e) {
-                    e.printStackTrace();
+    /**
+     * 发消息
+     *
+     * @param message message
+     * @throws IOException IOException
+     */
+//    @OnMessage
+//    public void onMessage(String message) throws IOException {
+//        String date = "<font color='green'>" + dateFormat.format(new Date()) + "</font></br>";
+//        // 群发消息
+//        for (MyWebSocket item : webSocketSet) {
+//            item.sendMessage(date + message);
+//        }
+//        LOGGER.info("客户端消息:{}", message);
+//
+//    }
+
+    @OnMessage
+    public String onMessage(String message) throws IOException {
+        JsonObject json = GameMessageJsonHelper.parse(message);
+
+        String type = json.get("type").getAsString();
+        switch (type) {
+            case "answer":
+                String choice = json.get("choice").getAsString();
+                System.out.println("Choice: " + choice);
+                for (GameWebSocket item : webSocketSet) {
+                    item.sendMessage("选择的选项是" + choice);
                 }
-            }
-        }
-
-        /**
-         * 发生错误时调用
-         * */
-         @OnError
-         public void onError(Session session, Throwable error) {
-             System.out.println("发生错误");
-             error.printStackTrace();
-         }
-
-
-         public void sendMessage(String message) throws IOException {
-            this.session.getBasicRemote().sendText(message);
-         //this.session.getAsyncRemote().sendText(message);
-         }
-
-
-         /**
-          * 群发自定义消息
-          * */
-        public static void sendInfo(String message) throws IOException {
-            for (GameWebSocket item : webSocketSet) {
-                try {
-                    item.sendMessage(message);
-                } catch (IOException e) {
-                    continue;
+                return choice;
+            default:
+                System.out.println("无法解析的消息类型");
+                for (GameWebSocket item : webSocketSet) {
+                    item.sendMessage("无法解析的消息类型");
                 }
-            }
+                return null;
         }
+    }
 
-        public static synchronized int getOnlineCount() {
-            return onlineCount;
-        }
+    /**
+     * 发送消息
+     *
+     * @param message message
+     * @throws IOException IOException
+     */
+    private void sendMessage(String message) throws IOException {
+        this.session.getBasicRemote().sendText(message);
+    }
 
-        public static synchronized void addOnlineCount() {
-            GameWebSocket.onlineCount++;
-        }
+    private void answerCorrect(String choice, Player player, Question question) {
 
-        public static synchronized void subOnlineCount() {
-            GameWebSocket.onlineCount--;
-        }
+    }
+
+
 }

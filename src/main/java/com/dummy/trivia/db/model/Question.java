@@ -1,12 +1,10 @@
 package com.dummy.trivia.db.model;
 
-import com.dummy.trivia.db.model.base.BaseModel;
 import com.google.gson.annotations.Expose;
 import lombok.Data;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.List;
 
 @Data
 @Entity

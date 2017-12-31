@@ -1,6 +1,5 @@
 package com.dummy.trivia.service;
 
-import com.dummy.trivia.db.model.Player;
 import com.dummy.trivia.db.model.User;
 
 public interface IUserService {

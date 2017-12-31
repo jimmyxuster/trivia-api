@@ -4,7 +4,6 @@ import com.dummy.trivia.db.model.Game;
 import com.dummy.trivia.db.model.Player;
 import com.dummy.trivia.db.model.Question;
 import com.dummy.trivia.db.model.Room;
-import com.dummy.trivia.db.repository.PlayerRepository;
 import com.dummy.trivia.db.repository.RoomRepository;
 import com.dummy.trivia.service.IPlayerService;
 import org.springframework.beans.factory.annotation.Autowired;

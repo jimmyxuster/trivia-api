@@ -5,7 +5,6 @@ import com.dummy.trivia.db.model.Player;
 import com.dummy.trivia.db.model.Question;
 import com.dummy.trivia.db.model.Room;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 public interface IGameService {

@@ -3,7 +3,6 @@ package com.dummy.trivia.db.model;
 import com.dummy.trivia.db.model.base.BaseModel;
 import com.google.gson.annotations.Expose;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class Game extends BaseModel {

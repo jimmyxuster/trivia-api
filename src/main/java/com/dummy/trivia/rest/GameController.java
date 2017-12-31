@@ -1,7 +1,6 @@
 package com.dummy.trivia.rest;
 
 import com.dummy.trivia.db.model.Game;
-import com.dummy.trivia.db.model.Player;
 import com.dummy.trivia.db.model.Room;
 import com.dummy.trivia.db.model.User;
 import com.dummy.trivia.rest.common.RestResponse;
@@ -16,8 +15,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 public class GameController {

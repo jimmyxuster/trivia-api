@@ -1,6 +1,6 @@
 package com.dummy.trivia.db.model.base;
 
-import com.dummy.trivia.db.model.GeneratedValue;
+import com.dummy.trivia.db.model.annotation.GeneratedValue;
 import org.springframework.data.annotation.Id;
 
 public class BaseAutoIncModel {
