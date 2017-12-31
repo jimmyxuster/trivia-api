@@ -1,6 +1,12 @@
 package com.dummy.trivia.socket;
 
+import com.dummy.trivia.db.model.Player;
+import com.dummy.trivia.db.model.Question;
 import com.dummy.trivia.db.model.Room;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,14 +102,38 @@ public class MyWebSocket {
      * @param message message
      * @throws IOException IOException
      */
+//    @OnMessage
+//    public void onMessage(String message) throws IOException {
+//        String date = "<font color='green'>" + dateFormat.format(new Date()) + "</font></br>";
+//        // 群发消息
+//        for (MyWebSocket item : webSocketSet) {
+//            item.sendMessage(date + message);
+//        }
+//        LOGGER.info("客户端消息:{}", message);
+//
+//    }
+
     @OnMessage
-    public void onMessage(String message) throws IOException {
-        String date = "<font color='green'>" + dateFormat.format(new Date()) + "</font></br>";
-        // 群发消息
-        for (MyWebSocket item : webSocketSet) {
-            item.sendMessage(date + message);
+    public String onMessage(String message) throws IOException {
+        JsonParser parser =new JsonParser();  //创建json解析器
+        JsonObject json = (JsonObject) parser.parse(message);
+
+        String type = json.get("type").getAsString();
+        switch (type) {
+            case "answer":
+                String choice = json.get("choice").getAsString();
+                System.out.println("Choice: " + choice);
+                for (MyWebSocket item : webSocketSet) {
+                    item.sendMessage("选择的选项是" + choice);
+                }
+                return choice;
+            default:
+                System.out.println("无法解析的消息类型");
+                for (MyWebSocket item : webSocketSet) {
+                    item.sendMessage("无法解析的消息类型");
+                }
+                return null;
         }
-        LOGGER.info("客户端消息:{}", message);
     }
 
     /**
@@ -114,6 +144,10 @@ public class MyWebSocket {
      */
     private void sendMessage(String message) throws IOException {
         this.session.getBasicRemote().sendText(message);
+    }
+
+    private void answerCorrect(String choice, Player player, Question question) {
+
     }
 
 

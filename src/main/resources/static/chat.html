@@ -91,7 +91,8 @@
             return;
         }
         var username = getQueryString("userName");
-        var message = "<span style='background: lightpink'>" + username + "</span>：<span class='text-background'>" + document.getElementById('text').value + "</span><br/>";
+//        var message = "<span style='background: lightpink'>" + username + "</span>：<span class='text-background'>" + document.getElementById('text').value + "</span><br/>";
+        var message = document.getElementById('text').value;
         websocket.send(message);
         document.getElementById('text').value = "";
     }

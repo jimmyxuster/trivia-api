@@ -1,13 +1,21 @@
 package com.dummy.trivia.db.model;
 
+import com.google.gson.annotations.Expose;
+
 import java.util.Random;
 
-public class Player extends User {
+public class Player {
 
+    @Expose
     private User user;
 
+    @Expose
     private int coinCount = 0;
+
+    @Expose
     private boolean isPrisoned = false;
+
+    @Expose
     private int position = 0;
 
     public Player(User user) {
@@ -17,9 +25,8 @@ public class Player extends User {
         this.position = generateRandomInt(0, Game.BOARD_SIZE - 1);
     }
 
-    @Override
     public String getUsername() {
-        return super.getUsername();
+        return user.getUsername();
     }
 
     public User getUser() {
@@ -61,5 +68,15 @@ public class Player extends User {
     public int generateRandomInt(int min, int max) {
         Random random = new Random();
         return random.nextInt(max) % (max - min + 1) + min;
+    }
+
+    @Override
+    public String toString() {
+        return "Player{" +
+                "user=" + user +
+                ", coinCount=" + coinCount +
+                ", isPrisoned=" + isPrisoned +
+                ", position=" + position +
+                '}';
     }
 }

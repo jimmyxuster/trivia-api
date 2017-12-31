@@ -6,10 +6,12 @@ import com.dummy.trivia.db.repository.QuestionRepository;
 import com.dummy.trivia.service.IQuestionService;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
 
+@Service
 public class QuestionService implements IQuestionService {
 
     @Autowired

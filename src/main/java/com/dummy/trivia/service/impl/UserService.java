@@ -1,5 +1,6 @@
 package com.dummy.trivia.service.impl;
 
+import com.dummy.trivia.db.model.Player;
 import com.dummy.trivia.db.model.User;
 import com.dummy.trivia.db.repository.UserRepository;
 import com.dummy.trivia.service.IUserService;
@@ -50,5 +51,21 @@ public class UserService implements IUserService {
             }
         }
         return savedUser;
+    }
+
+    @Override
+    public int getLevelByExp(int exp) {
+        if (exp < 0)
+            return 0;
+        else if (exp <= 10)
+            return 1;
+        else if (exp <= 30)
+            return 2;
+        else if (exp <= 60)
+            return 3;
+        else if (exp <= 100)
+            return 4;
+        else
+            return 5;
     }
 }

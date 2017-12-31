@@ -19,9 +19,5 @@ public interface IPlayerService {
 
     void incrementCoinCount(Player player);
 
-    void incrementWinCount(Player player);
-
-    int getLevelByExp(int exp);
-
 //    void sendEmotion();
 }

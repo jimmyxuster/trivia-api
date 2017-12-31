@@ -2,6 +2,7 @@ package com.dummy.trivia.db.model;
 
 import com.dummy.trivia.db.model.base.BaseModel;
 import com.google.gson.annotations.Expose;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,5 +88,14 @@ public class Room extends BaseModel {
         return fourRandom;
     }
 
-
+    @Override
+    public String toString() {
+        return "Room{" +
+                "roomName='" + roomName + '\'' +
+                ", ownerName='" + ownerName + '\'' +
+                ", players=" + players +
+                ", status='" + status + '\'' +
+                ", questionType='" + questionType + '\'' +
+                '}';
+    }
 }

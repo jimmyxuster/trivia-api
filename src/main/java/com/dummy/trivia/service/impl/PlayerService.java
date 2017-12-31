@@ -8,11 +8,10 @@ import com.dummy.trivia.db.repository.PlayerRepository;
 import com.dummy.trivia.db.repository.RoomRepository;
 import com.dummy.trivia.service.IPlayerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+@Service
 public class PlayerService implements IPlayerService {
-
-    @Autowired
-    PlayerRepository playerRepository;
 
     @Autowired
     RoomRepository roomRepository;
@@ -57,24 +56,4 @@ public class PlayerService implements IPlayerService {
         player.incrementCoinCount();
     }
 
-    @Override
-    public void incrementWinCount(Player player) {
-        player.incrementWinCount();
-    }
-
-    @Override
-    public int getLevelByExp(int exp) {
-        if (exp < 0)
-            return 0;
-        else if (exp <= 10)
-            return 1;
-        else if (exp <= 30)
-            return 2;
-        else if (exp <= 60)
-            return 3;
-        else if (exp <= 100)
-            return 4;
-        else
-            return 5;
-    }
 }

@@ -1,5 +1,7 @@
 package com.dummy.trivia.rest;
 
+import com.dummy.trivia.db.model.Game;
+import com.dummy.trivia.db.model.Player;
 import com.dummy.trivia.db.model.Room;
 import com.dummy.trivia.db.model.User;
 import com.dummy.trivia.rest.common.RestResponse;
@@ -20,7 +22,7 @@ import java.util.Map;
 @RestController
 public class GameController {
 
-    private Map<String, User> userMap = new HashMap<>();
+//    private Map<String, User> userMap = new HashMap<>();
 
     @Autowired
     IGameService gameService;
@@ -41,10 +43,10 @@ public class GameController {
 
     @Secured({"ROLE_USER"})
     @RequestMapping(value = "/game/room", method = RequestMethod.POST)
-    //创建房间，并使当前用户成为房主，返回房间信息
-    public RestResponse createRoom(Room room, HttpServletRequest request) {
+    //创建房间，选择题目类型，并使当前用户成为房主，返回房间信息
+    public RestResponse createRoom(Room room, String type, HttpServletRequest request) {
         String currentUserName = AuthenticationUtil.getCurrentUserAuthentication(request).getName();
-        room = gameService.createRoom(currentUserName);
+        room = gameService.createRoom(currentUserName, type);
         if (room == null) {
             return RestResponse.bad(-10013, "创建房间失败");
         }
@@ -54,22 +56,47 @@ public class GameController {
 
     @Secured({"ROLE_USER"})
     @RequestMapping(value = "/game/room/{roomName}", method = RequestMethod.GET)
+    //加入房间
     public RestResponse joinRoom(@PathVariable String roomName, HttpServletRequest request) {
         Room room = gameService.getRoomInfo(roomName);
         if (room == null) {
             return RestResponse.bad(-10014, "加入房间失败，房间不存在");
         }
         String currentUserName = AuthenticationUtil.getCurrentUserAuthentication(request).getName();
-        User user = userService.getUserInfo(currentUserName);
-        userMap.put(currentUserName, user);
+//        User user = userService.getUserInfo(currentUserName);
+//        userMap.put(currentUserName, user);
         gameService.enterRoom(currentUserName, room);
         return RestResponse.good(room);
     }
 
     @Secured({"ROLE_USER"})
-    @RequestMapping(value = "/game/{room}", method = RequestMethod.GET)
-    public RestResponse runGame(@PathVariable String roomId) {
-        return RestResponse.bad(0, "");
+    @RequestMapping(value = "/game/room/{roomName}/quit", method = RequestMethod.GET)
+    //加入房间
+    public RestResponse quitRoom(@PathVariable String roomName, HttpServletRequest request) {
+        Room room = gameService.getRoomInfo(roomName);
+        if (room == null) {
+            return RestResponse.bad(-10014, "退出房间失败，房间不存在");
+        }
+        String currentUserName = AuthenticationUtil.getCurrentUserAuthentication(request).getName();
+//        User user = userService.getUserInfo(currentUserName);
+//        userMap.put(currentUserName, user);
+        gameService.quitRoom(currentUserName, room);
+        return RestResponse.good(room);
+    }
+
+    @Secured({"ROLE_USER"})
+    @RequestMapping(value = "/game/{roomName}", method = RequestMethod.GET)
+    public RestResponse runGame(@PathVariable String roomName, Game game) {
+        Room room = gameService.getRoomInfo(roomName);
+        if (room == null) {
+            return RestResponse.bad(-10014, "开始游戏失败，房间不存在");
+        }
+        game = gameService.initializeGame(roomName);
+        System.out.println(game);
+        gameService.startGame(game);
+        gameService.afterGame(game);
+
+        return RestResponse.good(game);
     }
 
 
