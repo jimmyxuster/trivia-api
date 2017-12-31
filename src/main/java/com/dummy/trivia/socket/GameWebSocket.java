@@ -1,12 +1,18 @@
 package com.dummy.trivia.socket;
 
+import com.dummy.trivia.config.Config;
 import com.dummy.trivia.db.model.Player;
 import com.dummy.trivia.db.model.Question;
 import com.dummy.trivia.db.model.Room;
+import com.dummy.trivia.db.model.base.BaseGameResponse;
+import com.dummy.trivia.db.model.game.Answer;
+import com.dummy.trivia.service.IQuestionService;
+import com.dummy.trivia.util.GameGsonUtil;
 import com.dummy.trivia.util.GameMessageJsonHelper;
 import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.websocket.OnClose;
@@ -38,6 +44,9 @@ import java.util.concurrent.CopyOnWriteArraySet;
 @ServerEndpoint("/websocket")
 @Component
 public class GameWebSocket {
+
+    @Autowired
+    IQuestionService questionService;
 
 //    private static DateFormat dateFormat = new SimpleDateFormat("HH:mm:SS");
     private static final Logger LOGGER = LoggerFactory.getLogger(GameWebSocket.class);
@@ -118,16 +127,27 @@ public class GameWebSocket {
             case "answer":
                 String choice = json.get("choice").getAsString();
                 System.out.println("Choice: " + choice);
-                for (GameWebSocket item : webSocketSet) {
-                    item.sendMessage("选择的选项是" + choice);
-                }
+                handleAnswer("选择的选项是" + choice);
                 return choice;
             default:
                 System.out.println("无法解析的消息类型");
-                for (GameWebSocket item : webSocketSet) {
-                    item.sendMessage("无法解析的消息类型");
-                }
+                handleAnswer("无法解析的消息类型");
                 return null;
+        }
+    }
+
+    private void handleAnswer(String s) throws IOException {
+        Answer answer = questionService.attemptAnswer(s);
+        BaseGameResponse response;
+        if (answer == null) {
+            response = BaseGameResponse.bad(Config.GAME_MSG_TYPE_ANSWER,
+                    -100, "没有正在进行的题目或作答格式错误");
+        } else {
+            response = BaseGameResponse.good(Config.GAME_MSG_TYPE_ANSWER, answer);
+        }
+        String responseMsg = GameGsonUtil.convertToJson(response);
+        for (GameWebSocket item : webSocketSet) {
+            item.sendMessage(responseMsg);
         }
     }
 

@@ -11,20 +11,20 @@
 #
 #server.port=8080
 spring:
-#Êı¾İ¿âÅäÖÃ
+#ï¿½ï¿½ï¿½İ¿ï¿½ï¿½ï¿½ï¿½ï¿½
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/trivia_q
-    username: root
-    password:
-#jpaÅäÖÃ
+    url: jdbc:mysql://106.15.229.43:3306/trivia
+    username: jimmy
+    password: Trivia_12345
+#jpaï¿½ï¿½ï¿½ï¿½
   jpa:
     database: mysql
     show-sql: true
     generate-ddl: true
     hibernate:
       ddl-auto: update
-#mongoÅäÖÃ
+#mongoï¿½ï¿½ï¿½ï¿½
   data:
     mongodb:
       uri: mongodb://jimmy:asswecan12345@106.15.229.43:27017/trivia

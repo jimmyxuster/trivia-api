@@ -2,6 +2,7 @@ package com.dummy.trivia.service.impl;
 
 import com.dummy.trivia.db.model.Player;
 import com.dummy.trivia.db.model.Question;
+import com.dummy.trivia.db.model.game.Answer;
 import com.dummy.trivia.db.repository.QuestionRepository;
 import com.dummy.trivia.service.IQuestionService;
 import com.google.gson.Gson;
@@ -16,6 +17,8 @@ public class QuestionService implements IQuestionService {
 
     @Autowired
     QuestionRepository questionRepository;
+
+    private Question onGoingQuestion;
 
     @Override
     public String getQuestionInfo(String id) {
@@ -37,6 +40,15 @@ public class QuestionService implements IQuestionService {
     @Override
     public Question getRandomQuestion(List<Question> questions) {
         Collections.shuffle(questions);
-        return questions.get(0);
+        onGoingQuestion = questions.get(0);
+        return onGoingQuestion;
+    }
+
+    @Override
+    public Answer attemptAnswer(String answer) {
+        if (onGoingQuestion == null) {
+            return new Answer(answer, null);
+        }
+        return new Answer(answer, onGoingQuestion.getAnswer());
     }
 }
