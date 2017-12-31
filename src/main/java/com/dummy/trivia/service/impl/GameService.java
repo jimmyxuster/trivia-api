@@ -6,7 +6,6 @@ import com.dummy.trivia.db.model.User;
 import com.dummy.trivia.db.repository.GameRepository;
 import com.dummy.trivia.db.repository.RoomRepository;
 import com.dummy.trivia.db.repository.UserRepository;
-import com.dummy.trivia.rest.common.RestResponse;
 import com.dummy.trivia.service.IGameService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

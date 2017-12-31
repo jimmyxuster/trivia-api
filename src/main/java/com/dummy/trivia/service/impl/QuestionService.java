@@ -2,11 +2,9 @@ package com.dummy.trivia.service.impl;
 
 import com.dummy.trivia.db.model.Player;
 import com.dummy.trivia.db.model.Question;
-import com.dummy.trivia.db.model.QuestionType;
 import com.dummy.trivia.db.repository.QuestionRepository;
 import com.dummy.trivia.service.IQuestionService;
 import com.google.gson.Gson;
-import org.codehaus.jackson.map.util.JSONPObject;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collections;

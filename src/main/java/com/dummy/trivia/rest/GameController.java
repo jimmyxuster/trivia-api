@@ -1,6 +1,5 @@
 package com.dummy.trivia.rest;
 
-import com.dummy.trivia.db.model.Player;
 import com.dummy.trivia.db.model.Room;
 import com.dummy.trivia.db.model.User;
 import com.dummy.trivia.rest.common.RestResponse;

@@ -1,16 +1,13 @@
 package com.dummy.trivia.socket;
 
 import com.dummy.trivia.db.model.Room;
-import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
-import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -35,9 +32,9 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * Copyright(©) 2015 by xiaomo.
  **/
 
-@ServerEndpoint("/websocket")
-@Component
-@Data
+//@ServerEndpoint("/websocket")
+//@Component
+//@Data
 public class MyWebSocket {
 
     private static DateFormat dateFormat = new SimpleDateFormat("HH:mm:SS");

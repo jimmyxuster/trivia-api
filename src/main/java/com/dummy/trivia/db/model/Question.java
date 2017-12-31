@@ -1,11 +1,8 @@
 package com.dummy.trivia.db.model;
 
-import com.dummy.trivia.db.model.base.BaseModel;
-import com.google.gson.annotations.Expose;
-
 import javax.persistence.*;
+import javax.persistence.GeneratedValue;
 import javax.validation.constraints.NotNull;
-import java.util.List;
 
 @Entity
 @Table(name = "question")
