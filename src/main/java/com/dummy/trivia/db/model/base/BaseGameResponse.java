@@ -14,6 +14,7 @@ public class BaseGameResponse {
 
     private BaseGameResponse(String type, int code, String message) {
         this.type = type;
+        this.code = code;
         this.message = message;
     }
 

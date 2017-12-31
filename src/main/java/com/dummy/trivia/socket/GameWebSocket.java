@@ -3,17 +3,18 @@ package com.dummy.trivia.socket;
 import com.dummy.trivia.config.Config;
 import com.dummy.trivia.db.model.Player;
 import com.dummy.trivia.db.model.Question;
-import com.dummy.trivia.db.model.Room;
 import com.dummy.trivia.db.model.base.BaseGameResponse;
 import com.dummy.trivia.db.model.game.Answer;
 import com.dummy.trivia.service.IQuestionService;
+import com.dummy.trivia.service.impl.QuestionService;
 import com.dummy.trivia.util.GameGsonUtil;
 import com.dummy.trivia.util.GameMessageJsonHelper;
 import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
@@ -21,8 +22,6 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
@@ -41,18 +40,20 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * Copyright(©) 2015 by xiaomo.
  **/
 
-@ServerEndpoint("/websocket")
+@ServerEndpoint(value="/websocket")
 @Component
-public class GameWebSocket {
+public class GameWebSocket extends TextWebSocketHandler {
 
-    @Autowired
-    IQuestionService questionService;
+    private static ApplicationContext applicationContext;
+
+    public static void setApplicationContext(ApplicationContext context) {
+        applicationContext = context;
+    }
 
 //    private static DateFormat dateFormat = new SimpleDateFormat("HH:mm:SS");
     private static final Logger LOGGER = LoggerFactory.getLogger(GameWebSocket.class);
     private static int onlineCount = 0;
     private static CopyOnWriteArraySet<GameWebSocket> webSocketSet = new CopyOnWriteArraySet<>();
-    private static List<Room> rooms = new ArrayList<>();
     private Session session;
 
     /**
@@ -126,9 +127,8 @@ public class GameWebSocket {
         switch (type) {
             case "answer":
                 String choice = json.get("choice").getAsString();
-                System.out.println("Choice: " + choice);
-                handleAnswer("选择的选项是" + choice);
-                return choice;
+                handleAnswer(choice);
+                return null;
             default:
                 System.out.println("无法解析的消息类型");
                 handleAnswer("无法解析的消息类型");
@@ -137,6 +137,7 @@ public class GameWebSocket {
     }
 
     private void handleAnswer(String s) throws IOException {
+        IQuestionService questionService = applicationContext.getBean(QuestionService.class);
         Answer answer = questionService.attemptAnswer(s);
         BaseGameResponse response;
         if (answer == null) {

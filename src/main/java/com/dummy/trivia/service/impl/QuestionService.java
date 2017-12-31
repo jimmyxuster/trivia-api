@@ -8,6 +8,7 @@ import com.dummy.trivia.service.IQuestionService;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -46,8 +47,8 @@ public class QuestionService implements IQuestionService {
 
     @Override
     public Answer attemptAnswer(String answer) {
-        if (onGoingQuestion == null) {
-            return new Answer(answer, null);
+        if (onGoingQuestion == null || StringUtils.isEmpty(answer)) {
+            return null;
         }
         return new Answer(answer, onGoingQuestion.getAnswer());
     }
