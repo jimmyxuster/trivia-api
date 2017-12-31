@@ -9,13 +9,11 @@ import com.google.gson.JsonParser;
 import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
-import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -24,9 +22,25 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-@ServerEndpoint("/websocket")
-@Component
-@Data
+/**
+ * 把今天最好的表现当作明天最新的起点．．～
+ * いま 最高の表現 として 明日最新の始発．．～
+ * Today the best performance  as tomorrow newest starter!
+ * Created by IntelliJ IDEA.
+ * <p>
+ *
+ * @author : xiaomo
+ * github: https://github.com/xiaomoinfo
+ * email: xiaomo@xiaomo.info
+ * <p>
+ * Date: 2016/11/3 16:36
+ * Description: 用户实体类
+ * Copyright(©) 2015 by xiaomo.
+ **/
+
+//@ServerEndpoint("/websocket")
+//@Component
+//@Data
 public class MyWebSocket {
 
     private static DateFormat dateFormat = new SimpleDateFormat("HH:mm:SS");

@@ -5,7 +5,6 @@ import com.dummy.trivia.db.repository.GameRepository;
 import com.dummy.trivia.db.repository.QuestionRepository;
 import com.dummy.trivia.db.repository.RoomRepository;
 import com.dummy.trivia.db.repository.UserRepository;
-import com.dummy.trivia.rest.common.RestResponse;
 import com.dummy.trivia.service.IGameService;
 import com.dummy.trivia.service.IPlayerService;
 import com.dummy.trivia.service.IQuestionService;
