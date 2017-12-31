@@ -9,12 +9,11 @@ import com.dummy.trivia.service.IGameService;
 import com.dummy.trivia.service.IPlayerService;
 import com.dummy.trivia.service.IQuestionService;
 import com.dummy.trivia.service.IUserService;
-import com.dummy.trivia.socket.MyWebSocket;
+import com.dummy.trivia.socket.GameWebSocket;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -238,7 +237,7 @@ public class GameService implements IGameService {
 
     @Override
     public boolean answerCorrect(Question question, String message) {
-        MyWebSocket socket = new MyWebSocket();
+        GameWebSocket socket = new GameWebSocket();
         String choice = "";
         try {
             choice = socket.onMessage(message);

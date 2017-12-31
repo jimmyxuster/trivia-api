@@ -1,7 +1,7 @@
 package com.dummy.trivia.db;
 
-import com.dummy.trivia.db.model.GeneratedValue;
 import com.dummy.trivia.db.model.SequenceId;
+import com.dummy.trivia.db.model.annotation.GeneratedValue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
