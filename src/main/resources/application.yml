@@ -1,0 +1,33 @@
+#spring.data.mongodb.uri=mongodb://jimmy:asswecan12345@106.15.229.43:27017/trivia
+#
+#spring.datasource.url=jdbc:mysql://127.0.0.1:3306/trivia_q
+#spring.datasource.username=root
+#spring.datasource.password=
+#spring.datasource.driver-class-name=com.mysql.jdbc.Driver
+#
+#spring.jpa.database-platform=org.hibernate.dialect.MySQL5Dialect
+#
+#spring.thymeleaf.cache=false
+#
+#server.port=8080
+spring:
+# ˝æ›ø‚≈‰÷√
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/trivia_q
+    username: root
+    password:
+#jpa≈‰÷√
+  jpa:
+    database: mysql
+    show-sql: true
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+#mongo≈‰÷√
+  data:
+    mongodb:
+      uri: mongodb://jimmy:asswecan12345@106.15.229.43:27017/trivia
+
+server:
+  port: 8080

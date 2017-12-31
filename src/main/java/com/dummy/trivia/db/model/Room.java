@@ -87,4 +87,15 @@ public class Room extends BaseModel {
         }
         return fourRandom;
     }
+
+    @Override
+    public String toString() {
+        return "Room{" +
+                "roomName='" + roomName + '\'' +
+                ", ownerName='" + ownerName + '\'' +
+                ", players=" + players +
+                ", status='" + status + '\'' +
+                ", questionType='" + questionType + '\'' +
+                '}';
+    }
 }
