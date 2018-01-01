@@ -56,10 +56,4 @@ public class WebMvcConfig extends WebMvcConfigurerAdapter { @Override
 
         return gsonConverter;
     }
-
-    @Override
-    //为ws.html提供路径映射
-    public void addViewControllers(ViewControllerRegistry registry) {
-        registry.addViewController("/ws").setViewName("/ws");
-    }
 }

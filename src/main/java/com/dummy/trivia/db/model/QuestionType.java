@@ -1,8 +1,8 @@
 package com.dummy.trivia.db.model;
 
 public enum QuestionType {
-    Popular,
+    Geography,
     Literature,
-    Sports,
-    Math
+    Military,
+    Movie
 }

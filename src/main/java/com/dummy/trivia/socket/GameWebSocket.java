@@ -24,22 +24,6 @@ import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-/**
- * 把今天最好的表现当作明天最新的起点．．～
- * いま 最高の表現 として 明日最新の始発．．～
- * Today the best performance  as tomorrow newest starter!
- * Created by IntelliJ IDEA.
- * <p>
- *
- * @author : xiaomo
- * github: https://github.com/xiaomoinfo
- * email: xiaomo@xiaomo.info
- * <p>
- * Date: 2016/11/3 16:36
- * Description: 用户实体类
- * Copyright(©) 2015 by xiaomo.
- **/
-
 @ServerEndpoint(value="/websocket")
 @Component
 public class GameWebSocket extends TextWebSocketHandler {
