@@ -13,7 +13,6 @@ import com.dummy.trivia.service.IUserService;
 import com.dummy.trivia.service.impl.GameService;
 import com.dummy.trivia.service.impl.QuestionService;
 import com.dummy.trivia.service.impl.UserService;
-import com.dummy.trivia.util.GameGsonUtil;
 import com.dummy.trivia.util.GameMessageJsonHelper;
 import com.google.gson.JsonObject;
 import org.slf4j.Logger;
@@ -149,7 +148,7 @@ public class GameWebSocket extends TextWebSocketHandler {
 
     private void handleUnknown() throws IOException {
         BaseGameResponse response = BaseGameResponse.bad(Config.GAME_MSG_TYPE_UNKNOWN, -200, "无法解析的消息类型");
-        String responseMsg = GameGsonUtil.convertToJson(response);
+        String responseMsg = GameMessageJsonHelper.convertToJson(response);
         for (GameWebSocket item : webSocketSet) {
             item.sendMessage(responseMsg);
         }
@@ -165,7 +164,7 @@ public class GameWebSocket extends TextWebSocketHandler {
         } else {
             response = BaseGameResponse.good(Config.GAME_MSG_TYPE_ANSWER, answer);
         }
-        String responseMsg = GameGsonUtil.convertToJson(response);
+        String responseMsg = GameMessageJsonHelper.convertToJson(response);
         for (GameWebSocket item : webSocketSet) {
             item.sendMessage(responseMsg);
         }
@@ -195,7 +194,7 @@ public class GameWebSocket extends TextWebSocketHandler {
         } else {
             response = BaseGameResponse.bad(Config.GAME_MSG_TYPE_JOIN_ROOM, -101, "用户或房间数据不存在");
         }
-        String responseMsg = GameGsonUtil.convertToJson(response);
+        String responseMsg = GameMessageJsonHelper.convertToJson(response);
         for (GameWebSocket item : webSocketSet) {
             item.sendMessage(responseMsg);
         }
@@ -225,7 +224,7 @@ public class GameWebSocket extends TextWebSocketHandler {
         } else {
             response = BaseGameResponse.bad(Config.GAME_MSG_TYPE_EXIT_ROOM, -101, "用户或房间数据不存在");
         }
-        String responseMsg = GameGsonUtil.convertToJson(response);
+        String responseMsg = GameMessageJsonHelper.convertToJson(response);
         for (GameWebSocket item : webSocketSet) {
             item.sendMessage(responseMsg);
         }
@@ -272,7 +271,7 @@ public class GameWebSocket extends TextWebSocketHandler {
         } else {
             response = BaseGameResponse.bad(Config.GAME_MSG_TYPE_READY, -101, "用户或房间数据不存在");
         }
-        String responseMsg = GameGsonUtil.convertToJson(response);
+        String responseMsg = GameMessageJsonHelper.convertToJson(response);
         for (GameWebSocket item : webSocketSet) {
             item.sendMessage(responseMsg);
         }
@@ -303,7 +302,7 @@ public class GameWebSocket extends TextWebSocketHandler {
         } else {
             response = BaseGameResponse.bad(Config.GAME_MSG_TYPE_START_GAME, -101, "用户或房间数据不存在");
         }
-        String responseMsg = GameGsonUtil.convertToJson(response);
+        String responseMsg = GameMessageJsonHelper.convertToJson(response);
         for (GameWebSocket item : webSocketSet) {
             item.sendMessage(responseMsg);
         }
