@@ -9,12 +9,10 @@ import com.dummy.trivia.service.IUserService;
 import com.dummy.trivia.util.AuthenticationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 @RestController
 public class GameController {
@@ -35,6 +33,17 @@ public class GameController {
             return RestResponse.bad(-10010, "用户不存在，无法进入游戏");
         } else {
             return RestResponse.good(user);
+        }
+    }
+
+    @Secured({"ROLE_USER"})
+    @GetMapping("/game/room")
+    public RestResponse getRooms() {
+        List<Room> rooms = gameService.getRooms();
+        if (rooms == null) {
+            return RestResponse.bad(-10011, "查找房间失败");
+        } else {
+            return RestResponse.good(rooms);
         }
     }
 

@@ -9,6 +9,8 @@ import java.util.List;
 
 public interface IGameService {
 
+    List<Room> getRooms();
+
     Room getRoomInfo(String id);
 
     Room createRoom(String playerName, String type);

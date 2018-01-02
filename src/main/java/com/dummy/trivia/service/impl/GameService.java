@@ -37,6 +37,11 @@ public class GameService implements IGameService {
     IQuestionService questionService;
 
     @Override
+    public List<Room> getRooms() {
+        return roomRepository.findAll();
+    }
+
+    @Override
     public Room getRoomInfo(String roomName) {
         return StringUtils.isEmpty(roomName) ? null : roomRepository.findByRoomName(roomName);
     }
@@ -47,9 +52,11 @@ public class GameService implements IGameService {
         room.setOwnerName(playerName);
         room.setStatus("Avail");
         room.setQuestionType(type);
+        addPlayerToRoom(playerName, room);
         Room savedRoom = roomRepository.save(room);
-        if (savedRoom != null)
+        if (savedRoom != null) {
             return savedRoom;
+        }
         return null;
     }
 
@@ -57,16 +64,21 @@ public class GameService implements IGameService {
     public Room enterRoom(String playerName, Room room) {
         if (room.getPlayers().size() >= 4)
             return null;
-        User user = userRepository.findByUsername(playerName);
-        for (User u : room.getPlayers()) {
-            if (u.getUsername().equals(playerName))
-                return null;
-        }
-        room.addPlayer(user);
+        if (!addPlayerToRoom(playerName, room)) return null;
         Room savedRoom = roomRepository.save(room);
         if (savedRoom != null)
             return savedRoom;
         return null;
+    }
+
+    private boolean addPlayerToRoom(String playerName, Room room) {
+        User user = userRepository.findByUsername(playerName);
+        for (User u : room.getPlayers()) {
+            if (u.getUsername().equals(playerName))
+                return false;
+        }
+        room.addPlayer(user);
+        return true;
     }
 
     //将玩家从房间中移除，若移除后房间内没有玩家，删除房间
