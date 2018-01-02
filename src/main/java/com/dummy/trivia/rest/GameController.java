@@ -64,7 +64,7 @@ public class GameController {
     @Secured({"ROLE_USER"})
     @RequestMapping(value = "/game/room/{roomName}", method = RequestMethod.GET)
     //加入房间
-    public RestResponse joinRoom(@PathVariable String roomName, HttpServletRequest request) {
+    public RestResponse joinRoom(@PathVariable long roomName, HttpServletRequest request) {
         Room room = gameService.getRoomInfo(roomName);
         if (room == null) {
             return RestResponse.bad(-10014, "加入房间失败，房间不存在");
@@ -79,7 +79,7 @@ public class GameController {
     @Secured({"ROLE_USER"})
     @RequestMapping(value = "/game/room/{roomName}/quit", method = RequestMethod.GET)
     //加入房间
-    public RestResponse quitRoom(@PathVariable String roomName, HttpServletRequest request) {
+    public RestResponse quitRoom(@PathVariable long roomName, HttpServletRequest request) {
         Room room = gameService.getRoomInfo(roomName);
         if (room == null) {
             return RestResponse.bad(-10014, "退出房间失败，房间不存在");
@@ -93,7 +93,7 @@ public class GameController {
 
     @Secured({"ROLE_USER"})
     @RequestMapping(value = "/game/{roomName}", method = RequestMethod.GET)
-    public RestResponse runGame(@PathVariable String roomName, Game game) {
+    public RestResponse runGame(@PathVariable long roomName, Game game) {
         Room room = gameService.getRoomInfo(roomName);
         if (room == null) {
             return RestResponse.bad(-10014, "开始游戏失败，房间不存在");

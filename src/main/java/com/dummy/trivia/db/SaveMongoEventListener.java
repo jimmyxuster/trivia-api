@@ -25,7 +25,7 @@ public class SaveMongoEventListener extends AbstractMongoEventListener<Object> {
         if (source != null) {
             ReflectionUtils.doWithFields(source.getClass(), field -> {
                 ReflectionUtils.makeAccessible(field);
-                if (field.isAnnotationPresent(GeneratedValue.class)) {
+                if (field.isAnnotationPresent(GeneratedValue.class) && field.getLong(source) <= 0) {
                     field.set(source, getNextId(source.getClass().getSimpleName()));
                 }
             });

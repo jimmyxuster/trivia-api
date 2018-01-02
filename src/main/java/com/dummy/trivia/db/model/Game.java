@@ -16,7 +16,7 @@ public class Game extends BaseModel {
     @Expose
     private Player winner;
     @Expose
-    private String roomName;
+    private long roomName;
 
     private int[] board;
 
@@ -59,11 +59,11 @@ public class Game extends BaseModel {
         this.questions = questions;
     }
 
-    public String getRoomName() {
+    public long getRoomName() {
         return roomName;
     }
 
-    public void setRoomName(String roomName) {
+    public void setRoomName(long roomName) {
         this.roomName = roomName;
     }
 

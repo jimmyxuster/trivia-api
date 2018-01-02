@@ -11,7 +11,7 @@ public interface IGameService {
 
     List<Room> getRooms();
 
-    Room getRoomInfo(String id);
+    Room getRoomInfo(long id);
 
     Room createRoom(String playerName, String type);
 
@@ -19,9 +19,9 @@ public interface IGameService {
 
     void quitRoom(String playerName, Room room);
 
-    void destroyRoom(String id);
+    void destroyRoom(long id);
 
-    Game initializeGame(String roomName);
+    Game initializeGame(long roomName);
 
 //    boolean gameOver(Game game);
 

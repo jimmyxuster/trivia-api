@@ -33,8 +33,8 @@ public class Room {
         this.questionType = null;
     }
 
-    public String getRoomName() {
-        return String.valueOf(roomName);
+    public long getRoomName() {
+        return roomName;
     }
 
     public String getOwnerName() {
