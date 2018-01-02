@@ -21,7 +21,7 @@ public interface IGameService {
 
     Game initializeGame(String roomName);
 
-    boolean gameOver(Game game);
+//    boolean gameOver(Game game);
 
     void startGame(Game game);
 
@@ -30,5 +30,7 @@ public interface IGameService {
     boolean answerCorrect(Question question, String message);
 
     void afterGame(Game game);
+
+    Room saveRoom(Room room);
 //    void startGame(Game game);
 }

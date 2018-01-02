@@ -26,6 +26,8 @@ public class User extends BaseModel implements UserDetails {
     private int totalPlay;
     @Expose
     private int exp;
+    @Expose
+    private boolean isReady;
 
     private List<String> roles;
 
@@ -121,6 +123,14 @@ public class User extends BaseModel implements UserDetails {
         this.exp += value;
     }
 
+    public boolean isReady() {
+        return isReady;
+    }
+
+    public void setReady(boolean ready) {
+        isReady = ready;
+    }
+
     public List<String> getRoles() {
         return roles;
     }
@@ -142,6 +152,7 @@ public class User extends BaseModel implements UserDetails {
                 ", winCount=" + winCount +
                 ", totalPlay=" + totalPlay +
                 ", exp=" + exp +
+                ", isReady=" + isReady +
                 ", roles=" + roles +
                 ", authorities=" + authorities +
                 '}';

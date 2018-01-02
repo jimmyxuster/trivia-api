@@ -16,7 +16,7 @@ public class Room extends BaseModel {
     private String ownerName;
 
     @Expose
-    private List<String> players;
+    private List<User> players;
 
     @Expose
     private String status;
@@ -48,16 +48,16 @@ public class Room extends BaseModel {
         this.ownerName = ownerName;
     }
 
-    public List<String> getPlayers() {
+    public List<User> getPlayers() {
         return players;
     }
 
-    public void addPlayer(String playerName) {
-        this.players.add(playerName);
+    public void addPlayer(User user) {
+        this.players.add(user);
     }
 
-    public void removePlayer(String playerName) {
-        this.players.remove(playerName);
+    public void removePlayer(User user) {
+        this.players.remove(user);
     }
 
     public String getStatus() {

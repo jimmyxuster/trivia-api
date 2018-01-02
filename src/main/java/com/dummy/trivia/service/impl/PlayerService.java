@@ -1,10 +1,8 @@
 package com.dummy.trivia.service.impl;
 
-import com.dummy.trivia.db.model.Game;
-import com.dummy.trivia.db.model.Player;
-import com.dummy.trivia.db.model.Question;
-import com.dummy.trivia.db.model.Room;
+import com.dummy.trivia.db.model.*;
 import com.dummy.trivia.db.repository.RoomRepository;
+import com.dummy.trivia.db.repository.UserRepository;
 import com.dummy.trivia.service.IPlayerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,19 +12,23 @@ public class PlayerService implements IPlayerService {
 
     @Autowired
     RoomRepository roomRepository;
+    @Autowired
+    UserRepository userRepository;
 
     @Override
     public void createRoom(String playerName) {
         Room room = new Room();
         room.setOwnerName(playerName);
-        room.addPlayer(playerName);
+        User user = userRepository.findByUsername(playerName);
+        room.addPlayer(user);
     }
 
     @Override
     public void joinRoom(String playerName, String roomName) {
         Room room = roomRepository.findByRoomName(roomName);
         if(room != null) {
-            room.addPlayer(playerName);
+            User user = userRepository.findByUsername(playerName);
+            room.addPlayer(user);
         }
     }
 

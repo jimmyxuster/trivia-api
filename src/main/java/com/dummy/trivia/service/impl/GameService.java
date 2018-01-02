@@ -57,11 +57,12 @@ public class GameService implements IGameService {
     public Room enterRoom(String playerName, Room room) {
         if (room.getPlayers().size() >= 4)
             return null;
-        for (String name : room.getPlayers()) {
-            if (name.equals(playerName))
+        User user = userRepository.findByUsername(playerName);
+        for (User u : room.getPlayers()) {
+            if (u.getUsername().equals(playerName))
                 return null;
         }
-        room.addPlayer(playerName);
+        room.addPlayer(user);
         Room savedRoom = roomRepository.save(room);
         if (savedRoom != null)
             return savedRoom;
@@ -71,7 +72,8 @@ public class GameService implements IGameService {
     //将玩家从房间中移除，若移除后房间内没有玩家，删除房间
     @Override
     public void quitRoom(String playerName, Room room) {
-        room.removePlayer(playerName);
+        User user = userRepository.findByUsername(playerName);
+        room.removePlayer(user);
         roomRepository.save(room);
         if (room.getPlayers().size() <= 0)
             destroyRoom(room.getRoomName());
@@ -91,10 +93,10 @@ public class GameService implements IGameService {
             room.setStatus("running");
             Room savedRoom = roomRepository.save(room);
             //players是存放房间内所有玩家的列表
-            List<String> playerNames = room.getPlayers();
+            List<User> users = room.getPlayers();
             List<Player> players = new ArrayList<>();
-            for (String playerName : playerNames) {
-                Player player = new Player(userService.getUserInfo(playerName));
+            for (User u : users) {
+                Player player = new Player(u);
                 players.add(player);
             }
 
@@ -121,30 +123,30 @@ public class GameService implements IGameService {
     }
 
     //返回游戏是否满足结束条件
-    @Override
-    public boolean gameOver(Game game) {
-        if (game != null) {
-            //通过房间号查找房间，得到玩家列表
-            Room room = roomRepository.findByRoomName(game.getRoomName());
-            List<String> playerNames = room.getPlayers();
-            System.out.println("玩家有：" + playerNames.toString());
-            //如果有玩家金币数>=6，设置游戏状态为"over"，设置该玩家为赢家，保存游戏
-            for (String playerName : playerNames) {
-                Player player = new Player(userService.getUserInfo(playerName));
-                System.out.println("玩家" + player.getUsername() + "的金币数是" + player.getCoinCount());
-                if (player.getCoinCount() >= 6) {
-                    System.out.println("大于6，游戏结束了！");
-                    game.setStatus("over");
-                    game.setWinner(player);
-                    Game savedGame = gameRepository.save(game);
-                    System.out.println("Savedgame: " + savedGame.toString());
-                    return true;
-                }
-            }
-            return false;
-        }
-        return true;
-    }
+//    @Override
+//    public boolean gameOver(Game game) {
+//        if (game != null) {
+//            //通过房间号查找房间，得到玩家列表
+//            Room room = roomRepository.findByRoomName(game.getRoomName());
+//            List<String> playerNames = room.getPlayers();
+//            System.out.println("玩家有：" + playerNames.toString());
+//            //如果有玩家金币数>=6，设置游戏状态为"over"，设置该玩家为赢家，保存游戏
+//            for (String playerName : playerNames) {
+//                Player player = new Player(userService.getUserInfo(playerName));
+//                System.out.println("玩家" + player.getUsername() + "的金币数是" + player.getCoinCount());
+//                if (player.getCoinCount() >= 6) {
+//                    System.out.println("大于6，游戏结束了！");
+//                    game.setStatus("over");
+//                    game.setWinner(player);
+//                    Game savedGame = gameRepository.save(game);
+//                    System.out.println("Savedgame: " + savedGame.toString());
+//                    return true;
+//                }
+//            }
+//            return false;
+//        }
+//        return true;
+//    }
 
     @Override
     public void startGame(Game game) {
@@ -224,10 +226,10 @@ public class GameService implements IGameService {
     public List<Player> getPlayers(Game game) {
         if (game != null) {
             Room room = roomRepository.findByRoomName(game.getRoomName());
-            List<String> playerNames = room.getPlayers();
+            List<User> users = room.getPlayers();
             List<Player> players = new ArrayList<>();
-            for (String playerName : playerNames) {
-                Player player = new Player(userService.getUserInfo(playerName));
+            for (User u : users) {
+                Player player = new Player(u);
                 players.add(player);
             }
             return players;
@@ -283,5 +285,10 @@ public class GameService implements IGameService {
             System.out.println("现胜利数：" + winnerUser.getWinCount());
             System.out.println("现经验值：" + winnerUser.getExp());
         }
+    }
+
+    @Override
+    public Room saveRoom(Room room) {
+        return roomRepository.save(room);
     }
 }

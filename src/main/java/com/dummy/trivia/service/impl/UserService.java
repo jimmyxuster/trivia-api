@@ -53,6 +53,16 @@ public class UserService implements IUserService {
     }
 
     @Override
+    public User updateAndSaveUser(User user) {
+        return userRepository.save(user);
+    }
+
+//    @Override
+//    public List<User> getReadyUsers() {
+//        return userRepository.findByIsReady(true);
+//    }
+
+    @Override
     public int getLevelByExp(int exp) {
         if (exp < 0)
             return 0;

@@ -41,8 +41,9 @@ public class GameController {
     @Secured({"ROLE_USER"})
     @RequestMapping(value = "/game/room", method = RequestMethod.POST)
     //创建房间，选择题目类型，并使当前用户成为房主，返回房间信息
-    public RestResponse createRoom(Room room, String type, HttpServletRequest request) {
+    public RestResponse createRoom(Room room, HttpServletRequest request) {
         String currentUserName = AuthenticationUtil.getCurrentUserAuthentication(request).getName();
+        String type = room.getQuestionType();
         room = gameService.createRoom(currentUserName, type);
         if (room == null) {
             return RestResponse.bad(-10013, "创建房间失败");
