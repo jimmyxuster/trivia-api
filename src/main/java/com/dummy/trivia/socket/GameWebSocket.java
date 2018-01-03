@@ -28,10 +28,11 @@ import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-@ServerEndpoint(value="/websocket")
+@ServerEndpoint(value = "/websocket")
 @Component
 public class GameWebSocket extends TextWebSocketHandler {
 
@@ -41,11 +42,14 @@ public class GameWebSocket extends TextWebSocketHandler {
         applicationContext = context;
     }
 
-//    private static DateFormat dateFormat = new SimpleDateFormat("HH:mm:SS");
+    //    private static DateFormat dateFormat = new SimpleDateFormat("HH:mm:SS");
     private static final Logger LOGGER = LoggerFactory.getLogger(GameWebSocket.class);
     private static int onlineCount = 0;
     private static CopyOnWriteArraySet<GameWebSocket> webSocketSet = new CopyOnWriteArraySet<>();
     private Session session;
+
+    private String username;
+    private long roomName;
 
     /**
      * 获取在线人数
@@ -91,6 +95,17 @@ public class GameWebSocket extends TextWebSocketHandler {
         webSocketSet.remove(this);
         subOnlineCount();
         System.out.println("有一用户关闭!当前在线人数为" + getOnlineCount());
+        removeUserFromRoom();
+    }
+
+    private void removeUserFromRoom() {
+        if (this.username != null && this.roomName > 0) {
+            try {
+                handleExitRoom(username, roomName);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     /**
@@ -109,7 +124,6 @@ public class GameWebSocket extends TextWebSocketHandler {
 //        LOGGER.info("客户端消息:{}", message);
 //
 //    }
-
     @OnMessage
     public String onMessage(String message) throws IOException {
         JsonObject json = GameMessageJsonHelper.parse(message);
@@ -123,6 +137,7 @@ public class GameWebSocket extends TextWebSocketHandler {
             case "joinRoom":
                 String joinUsername = json.get("username").getAsString();
                 long joinRoomName = json.get("roomName").getAsLong();
+                setUsernameAndRoom(joinUsername, joinRoomName);
                 BaseGameResponse response = handleJoinRoom(joinUsername, joinRoomName);
                 if (response != null) {
                     return GameMessageJsonHelper.convertToJson(response);
@@ -136,11 +151,13 @@ public class GameWebSocket extends TextWebSocketHandler {
             case "ready":
                 String readyUsername = json.get("username").getAsString();
                 long readyRoomName = json.get("roomName").getAsLong();
+                setUsernameAndRoom(readyUsername, readyRoomName);
                 BaseGameResponse errorReady = handleReady(readyUsername, readyRoomName);
                 return errorReady == null ? null : GameMessageJsonHelper.convertToJson(errorReady);
             case "startGame":
                 String startGameUsername = json.get("username").getAsString();
                 long startGameRoomName = json.get("roomName").getAsLong();
+                setUsernameAndRoom(startGameUsername, startGameRoomName);
                 BaseGameResponse errorStartGame = handleStartGame(startGameUsername, startGameRoomName);
                 return errorStartGame == null ? null : GameMessageJsonHelper.convertToJson(errorStartGame);
             default:
@@ -214,10 +231,13 @@ public class GameWebSocket extends TextWebSocketHandler {
         User user = userService.getUserInfo(username);
         Room room = gameService.getRoomInfo(roomName);
         if (user != null && room != null) {
-            for (User u: room.getPlayers()) {
+            Iterator<User> it = room.getPlayers().iterator();
+            boolean singlePerson = room.getPlayers().size() == 1;
+            while (it.hasNext()) {
+                User u = it.next();
                 if (u != null && u.getUsername().equals(username)) {
-                    room.removePlayer(u);
-                    if (u.getUsername().equals(room.getOwnerName())) {
+                    it.remove();
+                    if (!singlePerson && u.getUsername().equals(room.getOwnerName())) {
                         room.setOwnerName(room.getPlayers().get(0).getUsername());
                     }
                     savedRoom = gameService.saveRoom(room);
@@ -249,7 +269,7 @@ public class GameWebSocket extends TextWebSocketHandler {
             if (username.equals(room.getOwnerName())) {
                 response = BaseGameResponse.bad(Config.GAME_MSG_TYPE_READY, -105, "房主无法准备");
             } else {
-                for (User u: room.getPlayers()) {
+                for (User u : room.getPlayers()) {
                     if (u != null && u.getUsername().equals(username)) {
                         isInRoom = true;
                         break;
@@ -329,4 +349,8 @@ public class GameWebSocket extends TextWebSocketHandler {
     }
 
 
+    private void setUsernameAndRoom(String username, long room) {
+        this.username = username;
+        this.roomName = room;
+    }
 }
