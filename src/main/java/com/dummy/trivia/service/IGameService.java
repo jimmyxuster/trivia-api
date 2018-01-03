@@ -9,7 +9,9 @@ import java.util.List;
 
 public interface IGameService {
 
-    Room getRoomInfo(String id);
+    List<Room> getRooms();
+
+    Room getRoomInfo(long id);
 
     Room createRoom(String playerName, String type);
 
@@ -17,9 +19,9 @@ public interface IGameService {
 
     void quitRoom(String playerName, Room room);
 
-    void destroyRoom(String id);
+    void destroyRoom(long id);
 
-    Game initializeGame(String roomName);
+    Game initializeGame(long roomName);
 
 //    boolean gameOver(Game game);
 

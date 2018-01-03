@@ -1,16 +1,18 @@
 package com.dummy.trivia.db.model;
 
-import com.dummy.trivia.db.model.base.BaseModel;
+import com.dummy.trivia.db.model.annotation.GeneratedValue;
 import com.google.gson.annotations.Expose;
+import org.springframework.data.annotation.Id;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
-public class Room extends BaseModel {
+public class Room {
 
+    @GeneratedValue
+    @Id
     @Expose
-    private String roomName;
+    private long roomName;
 
     @Expose
     private String ownerName;
@@ -25,19 +27,14 @@ public class Room extends BaseModel {
     private String questionType;
 
     public Room() {
-        this.roomName = getFourRandom();
         this.ownerName = null;
         this.players = new ArrayList<>();
         this.status = "Avail";
         this.questionType = null;
     }
 
-    public String getRoomName() {
+    public long getRoomName() {
         return roomName;
-    }
-
-    public void setRoomName(String roomName) {
-        this.roomName = roomName;
     }
 
     public String getOwnerName() {
@@ -74,17 +71,6 @@ public class Room extends BaseModel {
 
     public void setQuestionType(String questionType) {
         this.questionType = questionType;
-    }
-
-    public static String getFourRandom(){
-        Random random = new Random();
-        String fourRandom = random.nextInt(10000) + "";
-        int randLength = fourRandom.length();
-        if(randLength<4){
-            for(int i=1; i<=4-randLength; i++)
-                fourRandom = "0" + fourRandom;
-        }
-        return fourRandom;
     }
 
     @Override

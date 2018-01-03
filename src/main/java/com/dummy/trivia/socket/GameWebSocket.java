@@ -13,7 +13,6 @@ import com.dummy.trivia.service.IUserService;
 import com.dummy.trivia.service.impl.GameService;
 import com.dummy.trivia.service.impl.QuestionService;
 import com.dummy.trivia.service.impl.UserService;
-import com.dummy.trivia.util.GameGsonUtil;
 import com.dummy.trivia.util.GameMessageJsonHelper;
 import com.google.gson.JsonObject;
 import org.slf4j.Logger;
@@ -123,24 +122,27 @@ public class GameWebSocket extends TextWebSocketHandler {
                 return null;
             case "joinRoom":
                 String joinUsername = json.get("username").getAsString();
-                String joinRoomName = json.get("roomName").getAsString();
-                handleJoinRoom(joinUsername, joinRoomName);
+                long joinRoomName = json.get("roomName").getAsLong();
+                BaseGameResponse response = handleJoinRoom(joinUsername, joinRoomName);
+                if (response != null) {
+                    return GameMessageJsonHelper.convertToJson(response);
+                }
                 return null;
             case "exitRoom":
                 String exitUsername = json.get("username").getAsString();
-                String exitRoomName = json.get("roomName").getAsString();
+                long exitRoomName = json.get("roomName").getAsLong();
                 handleExitRoom(exitUsername, exitRoomName);
                 return null;
             case "ready":
                 String readyUsername = json.get("username").getAsString();
-                String readyRoomName = json.get("roomName").getAsString();
-                handleReady(readyUsername, readyRoomName);
-                return null;
+                long readyRoomName = json.get("roomName").getAsLong();
+                BaseGameResponse errorReady = handleReady(readyUsername, readyRoomName);
+                return errorReady == null ? null : GameMessageJsonHelper.convertToJson(errorReady);
             case "startGame":
                 String startGameUsername = json.get("username").getAsString();
-                String startGameRoomName = json.get("roomName").getAsString();
-                handleStartGame(startGameUsername, startGameRoomName);
-                return null;
+                long startGameRoomName = json.get("roomName").getAsLong();
+                BaseGameResponse errorStartGame = handleStartGame(startGameUsername, startGameRoomName);
+                return errorStartGame == null ? null : GameMessageJsonHelper.convertToJson(errorStartGame);
             default:
                 handleUnknown();
                 return null;
@@ -149,7 +151,7 @@ public class GameWebSocket extends TextWebSocketHandler {
 
     private void handleUnknown() throws IOException {
         BaseGameResponse response = BaseGameResponse.bad(Config.GAME_MSG_TYPE_UNKNOWN, -200, "无法解析的消息类型");
-        String responseMsg = GameGsonUtil.convertToJson(response);
+        String responseMsg = GameMessageJsonHelper.convertToJson(response);
         for (GameWebSocket item : webSocketSet) {
             item.sendMessage(responseMsg);
         }
@@ -165,43 +167,46 @@ public class GameWebSocket extends TextWebSocketHandler {
         } else {
             response = BaseGameResponse.good(Config.GAME_MSG_TYPE_ANSWER, answer);
         }
-        String responseMsg = GameGsonUtil.convertToJson(response);
+        String responseMsg = GameMessageJsonHelper.convertToJson(response);
         for (GameWebSocket item : webSocketSet) {
             item.sendMessage(responseMsg);
         }
     }
 
-    private void handleJoinRoom(String username, String roomName) throws IOException {
+    private BaseGameResponse handleJoinRoom(String username, long roomName) throws IOException {
         BaseGameResponse response = null;
         IUserService userService = applicationContext.getBean(UserService.class);
         IGameService gameService = applicationContext.getBean(GameService.class);
         User user = userService.getUserInfo(username);
         Room room = gameService.getRoomInfo(roomName);
-        if (user != null && room != null) {
+        if (user != null && room != null && room.getStatus().equals("Avail")) {
             if (room.getPlayers().size() >= 4) {
-                response = BaseGameResponse.bad(Config.GAME_MSG_TYPE_JOIN_ROOM, -104, "房间已满");
+                return BaseGameResponse.bad(Config.GAME_MSG_TYPE_JOIN_ROOM, -104, "房间已满");
             } else {
-                for (User u : room.getPlayers()) {
-                    if (u.getUsername().equals(username))
-                        response = BaseGameResponse.bad(Config.GAME_MSG_TYPE_JOIN_ROOM, -103, "玩家已经在房间内");
-                }
-                if (response == null) {
+                // 如果是房主，在创建房间时就已加入房间（防止房主被别人占位）
+                if (!username.equals(room.getOwnerName())) {
+                    for (User u : room.getPlayers()) {
+                        if (u.getUsername().equals(username)) {
+                            return BaseGameResponse.bad(Config.GAME_MSG_TYPE_JOIN_ROOM, -103, "玩家已经在房间内");
+                        }
+                    }
                     room.addPlayer(user);
-                    Room savedRoom = gameService.saveRoom(room);
-                    response = BaseGameResponse.good(Config.GAME_MSG_TYPE_JOIN_ROOM, savedRoom);
                 }
+                Room savedRoom = gameService.saveRoom(room);
+                response = BaseGameResponse.good(Config.GAME_MSG_TYPE_JOIN_ROOM, savedRoom);
             }
 
         } else {
-            response = BaseGameResponse.bad(Config.GAME_MSG_TYPE_JOIN_ROOM, -101, "用户或房间数据不存在");
+            return BaseGameResponse.bad(Config.GAME_MSG_TYPE_JOIN_ROOM, -101, "用户或房间数据不存在");
         }
-        String responseMsg = GameGsonUtil.convertToJson(response);
+        String responseMsg = GameMessageJsonHelper.convertToJson(response);
         for (GameWebSocket item : webSocketSet) {
             item.sendMessage(responseMsg);
         }
+        return null;
     }
 
-    private void handleExitRoom(String username, String roomName) throws IOException {
+    private void handleExitRoom(String username, long roomName) throws IOException {
         BaseGameResponse response = null;
         Room savedRoom = null;
         IUserService userService = applicationContext.getBean(UserService.class);
@@ -225,7 +230,7 @@ public class GameWebSocket extends TextWebSocketHandler {
         } else {
             response = BaseGameResponse.bad(Config.GAME_MSG_TYPE_EXIT_ROOM, -101, "用户或房间数据不存在");
         }
-        String responseMsg = GameGsonUtil.convertToJson(response);
+        String responseMsg = GameMessageJsonHelper.convertToJson(response);
         for (GameWebSocket item : webSocketSet) {
             item.sendMessage(responseMsg);
         }
@@ -233,7 +238,7 @@ public class GameWebSocket extends TextWebSocketHandler {
             gameService.destroyRoom(roomName);
     }
 
-    private void handleReady(String username, String roomName) throws IOException {
+    private BaseGameResponse handleReady(String username, long roomName) throws IOException {
         BaseGameResponse response = null;
         boolean isInRoom = false;
         IUserService userService = applicationContext.getBean(UserService.class);
@@ -247,38 +252,36 @@ public class GameWebSocket extends TextWebSocketHandler {
                 for (User u: room.getPlayers()) {
                     if (u != null && u.getUsername().equals(username)) {
                         isInRoom = true;
+                        break;
                     }
                 }
                 if (!isInRoom) {
-                    response = BaseGameResponse.bad(Config.GAME_MSG_TYPE_READY, -102, "用户不在该房间中");
+                    return BaseGameResponse.bad(Config.GAME_MSG_TYPE_READY, -102, "用户不在该房间中");
                 } else {
                     room.removePlayer(user);
                     user.setReady(true);
                     room.addPlayer(user);
                     Room savedRoom = gameService.saveRoom(room);
-                    List<User> readyUsers = new ArrayList<>();
+                    List<String> readyUsers = new ArrayList<>();
                     for (User u : room.getPlayers()) {
                         if (u.isReady()) {
-                            readyUsers.add(u);
+                            readyUsers.add(u.getUsername());
                         }
                     }
-                    List<String> readyUsernames = new ArrayList<>();
-                    for (User u : readyUsers) {
-                        readyUsernames.add(u.getUsername());
-                    }
-                    response = BaseGameResponse.good(Config.GAME_MSG_TYPE_READY, readyUsernames);
+                    response = BaseGameResponse.good(Config.GAME_MSG_TYPE_READY, readyUsers);
                 }
             }
         } else {
-            response = BaseGameResponse.bad(Config.GAME_MSG_TYPE_READY, -101, "用户或房间数据不存在");
+            return BaseGameResponse.bad(Config.GAME_MSG_TYPE_READY, -101, "用户或房间数据不存在");
         }
-        String responseMsg = GameGsonUtil.convertToJson(response);
+        String responseMsg = GameMessageJsonHelper.convertToJson(response);
         for (GameWebSocket item : webSocketSet) {
             item.sendMessage(responseMsg);
         }
+        return null;
     }
 
-    private void handleStartGame(String username, String roomName) throws IOException {
+    private BaseGameResponse handleStartGame(String username, long roomName) throws IOException {
         BaseGameResponse response = null;
         boolean isAllReady = true;
         IUserService userService = applicationContext.getBean(UserService.class);
@@ -292,7 +295,7 @@ public class GameWebSocket extends TextWebSocketHandler {
                 }
             }
             if (!isAllReady) {
-                response = BaseGameResponse.bad(Config.GAME_MSG_TYPE_START_GAME, -106, "玩家没有全部准备");
+                return BaseGameResponse.bad(Config.GAME_MSG_TYPE_START_GAME, -106, "玩家没有全部准备");
             } else {
                 for (User u : room.getPlayers()) {
                     u.setReady(false);
@@ -301,12 +304,13 @@ public class GameWebSocket extends TextWebSocketHandler {
                 response = BaseGameResponse.good(Config.GAME_MSG_TYPE_START_GAME, "");
             }
         } else {
-            response = BaseGameResponse.bad(Config.GAME_MSG_TYPE_START_GAME, -101, "用户或房间数据不存在");
+            return BaseGameResponse.bad(Config.GAME_MSG_TYPE_START_GAME, -101, "用户或房间数据不存在");
         }
-        String responseMsg = GameGsonUtil.convertToJson(response);
+        String responseMsg = GameMessageJsonHelper.convertToJson(response);
         for (GameWebSocket item : webSocketSet) {
             item.sendMessage(responseMsg);
         }
+        return null;
     }
 
 

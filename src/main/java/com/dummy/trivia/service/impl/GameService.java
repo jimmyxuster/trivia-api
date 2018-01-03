@@ -12,7 +12,6 @@ import com.dummy.trivia.service.IUserService;
 import com.dummy.trivia.socket.GameWebSocket;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,8 +36,13 @@ public class GameService implements IGameService {
     IQuestionService questionService;
 
     @Override
-    public Room getRoomInfo(String roomName) {
-        return StringUtils.isEmpty(roomName) ? null : roomRepository.findByRoomName(roomName);
+    public List<Room> getRooms() {
+        return roomRepository.findAll();
+    }
+
+    @Override
+    public Room getRoomInfo(long roomName) {
+        return roomName <= 0 ? null : roomRepository.findOne(roomName);
     }
 
     @Override
@@ -47,9 +51,11 @@ public class GameService implements IGameService {
         room.setOwnerName(playerName);
         room.setStatus("Avail");
         room.setQuestionType(type);
+        addPlayerToRoom(playerName, room);
         Room savedRoom = roomRepository.save(room);
-        if (savedRoom != null)
+        if (savedRoom != null) {
             return savedRoom;
+        }
         return null;
     }
 
@@ -57,16 +63,21 @@ public class GameService implements IGameService {
     public Room enterRoom(String playerName, Room room) {
         if (room.getPlayers().size() >= 4)
             return null;
-        User user = userRepository.findByUsername(playerName);
-        for (User u : room.getPlayers()) {
-            if (u.getUsername().equals(playerName))
-                return null;
-        }
-        room.addPlayer(user);
+        if (!addPlayerToRoom(playerName, room)) return null;
         Room savedRoom = roomRepository.save(room);
         if (savedRoom != null)
             return savedRoom;
         return null;
+    }
+
+    private boolean addPlayerToRoom(String playerName, Room room) {
+        User user = userRepository.findByUsername(playerName);
+        for (User u : room.getPlayers()) {
+            if (u.getUsername().equals(playerName))
+                return false;
+        }
+        room.addPlayer(user);
+        return true;
     }
 
     //将玩家从房间中移除，若移除后房间内没有玩家，删除房间
@@ -80,12 +91,12 @@ public class GameService implements IGameService {
     }
 
     @Override
-    public void destroyRoom(String roomName) {
-        roomRepository.deleteByRoomName(roomName);
+    public void destroyRoom(long roomName) {
+        roomRepository.delete(roomName);
     }
 
     @Override
-    public Game initializeGame(String roomName) {
+    public Game initializeGame(long roomName) {
         //通过房间号查找房间
         Room room = getRoomInfo(roomName);
         if (room != null) {
@@ -105,10 +116,10 @@ public class GameService implements IGameService {
 
             Game game = null;
             //如果game已经存在则查找，否则新建
-            if (gameRepository.findByRoomName(roomName) == null) {
+            if (gameRepository.findOne(roomName) == null) {
                 game = new Game();
             } else {
-                game = gameRepository.findByRoomName(roomName);
+                game = gameRepository.findOne(roomName);
             }
             //设置游戏的状态为"playing"、设置玩家、题库、房间号，并保存
             game.setStatus("playing");
@@ -225,7 +236,7 @@ public class GameService implements IGameService {
     @Override
     public List<Player> getPlayers(Game game) {
         if (game != null) {
-            Room room = roomRepository.findByRoomName(game.getRoomName());
+            Room room = roomRepository.findOne(game.getRoomName());
             List<User> users = room.getPlayers();
             List<Player> players = new ArrayList<>();
             for (User u : users) {
