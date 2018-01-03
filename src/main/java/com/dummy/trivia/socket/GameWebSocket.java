@@ -1,12 +1,10 @@
 package com.dummy.trivia.socket;
 
 import com.dummy.trivia.config.Config;
-import com.dummy.trivia.db.model.Player;
-import com.dummy.trivia.db.model.Question;
-import com.dummy.trivia.db.model.Room;
-import com.dummy.trivia.db.model.User;
+import com.dummy.trivia.db.model.*;
 import com.dummy.trivia.db.model.base.BaseGameResponse;
 import com.dummy.trivia.db.model.game.Answer;
+import com.dummy.trivia.db.model.game.TakeTurn;
 import com.dummy.trivia.service.IGameService;
 import com.dummy.trivia.service.IQuestionService;
 import com.dummy.trivia.service.IUserService;
@@ -28,6 +26,7 @@ import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -41,11 +40,13 @@ public class GameWebSocket extends TextWebSocketHandler {
         applicationContext = context;
     }
 
-//    private static DateFormat dateFormat = new SimpleDateFormat("HH:mm:SS");
-    private static final Logger LOGGER = LoggerFactory.getLogger(GameWebSocket.class);
     private static int onlineCount = 0;
     private static CopyOnWriteArraySet<GameWebSocket> webSocketSet = new CopyOnWriteArraySet<>();
     private Session session;
+
+    private Game game;
+    private Question onGoingQuestion;
+    private Player onGoingPlayer;
 
     /**
      * 获取在线人数
@@ -80,7 +81,7 @@ public class GameWebSocket extends TextWebSocketHandler {
         this.session = session;
         webSocketSet.add(this);
         addOnlineCount();
-        LOGGER.info("有新用户加入!当前在线人数为:{}", getOnlineCount());
+        System.out.println("有新用户加入!当前在线人数为" + getOnlineCount());
     }
 
     /**
@@ -93,45 +94,27 @@ public class GameWebSocket extends TextWebSocketHandler {
         System.out.println("有一用户关闭!当前在线人数为" + getOnlineCount());
     }
 
-    /**
-     * 发消息
-     *
-     * @param message message
-     * @throws IOException IOException
-     */
-//    @OnMessage
-//    public void onMessage(String message) throws IOException {
-//        String date = "<font color='green'>" + dateFormat.format(new Date()) + "</font></br>";
-//        // 群发消息
-//        for (MyWebSocket item : webSocketSet) {
-//            item.sendMessage(date + message);
-//        }
-//        LOGGER.info("客户端消息:{}", message);
-//
-//    }
-
     @OnMessage
     public String onMessage(String message) throws IOException {
         JsonObject json = GameMessageJsonHelper.parse(message);
 
         String type = json.get("type").getAsString();
         switch (type) {
-            case "answer":
-                String choice = json.get("choice").getAsString();
-                handleAnswer(choice);
-                return null;
             case "joinRoom":
                 String joinUsername = json.get("username").getAsString();
                 long joinRoomName = json.get("roomName").getAsLong();
-                BaseGameResponse response = handleJoinRoom(joinUsername, joinRoomName);
-                if (response != null) {
-                    return GameMessageJsonHelper.convertToJson(response);
+                BaseGameResponse joinResponse = handleJoinRoom(joinUsername, joinRoomName);
+                if (joinResponse != null) {
+                    return GameMessageJsonHelper.convertToJson(joinResponse);
                 }
                 return null;
             case "exitRoom":
                 String exitUsername = json.get("username").getAsString();
                 long exitRoomName = json.get("roomName").getAsLong();
-                handleExitRoom(exitUsername, exitRoomName);
+                BaseGameResponse exitResponse = handleExitRoom(exitUsername, exitRoomName);
+                if (exitResponse != null) {
+                    return GameMessageJsonHelper.convertToJson(exitResponse);
+                }
                 return null;
             case "ready":
                 String readyUsername = json.get("username").getAsString();
@@ -142,7 +125,26 @@ public class GameWebSocket extends TextWebSocketHandler {
                 String startGameUsername = json.get("username").getAsString();
                 long startGameRoomName = json.get("roomName").getAsLong();
                 BaseGameResponse errorStartGame = handleStartGame(startGameUsername, startGameRoomName);
-                return errorStartGame == null ? null : GameMessageJsonHelper.convertToJson(errorStartGame);
+                if (errorStartGame == null) {
+                    IGameService gameService = applicationContext.getBean(GameService.class);
+                    game = gameService.getGame(startGameRoomName);
+                    return null;
+                } else {
+                    return GameMessageJsonHelper.convertToJson(errorStartGame);
+                }
+            case "takeTurn":
+                BaseGameResponse takeTurnResponse = handleTakeTurn(game);
+                return takeTurnResponse == null ? null : GameMessageJsonHelper.convertToJson(takeTurnResponse);
+            case "answer":
+                String choice = json.get("choice").getAsString();
+                BaseGameResponse answerResponse = handleAnswer(choice);
+                if (answerResponse != null) {
+                    return GameMessageJsonHelper.convertToJson(answerResponse);
+                }
+                return null;
+            case "gameOver":
+                BaseGameResponse gameOverResponse = handleGameOver(game);
+                return gameOverResponse == null ? null : GameMessageJsonHelper.convertToJson(gameOverResponse);
             default:
                 handleUnknown();
                 return null;
@@ -151,22 +153,6 @@ public class GameWebSocket extends TextWebSocketHandler {
 
     private void handleUnknown() throws IOException {
         BaseGameResponse response = BaseGameResponse.bad(Config.GAME_MSG_TYPE_UNKNOWN, -200, "无法解析的消息类型");
-        String responseMsg = GameMessageJsonHelper.convertToJson(response);
-        for (GameWebSocket item : webSocketSet) {
-            item.sendMessage(responseMsg);
-        }
-    }
-
-    private void handleAnswer(String s) throws IOException {
-        IQuestionService questionService = applicationContext.getBean(QuestionService.class);
-        Answer answer = questionService.attemptAnswer(s);
-        BaseGameResponse response;
-        if (answer == null) {
-            response = BaseGameResponse.bad(Config.GAME_MSG_TYPE_ANSWER,
-                    -100, "没有正在进行的题目或作答格式错误");
-        } else {
-            response = BaseGameResponse.good(Config.GAME_MSG_TYPE_ANSWER, answer);
-        }
         String responseMsg = GameMessageJsonHelper.convertToJson(response);
         for (GameWebSocket item : webSocketSet) {
             item.sendMessage(responseMsg);
@@ -206,7 +192,7 @@ public class GameWebSocket extends TextWebSocketHandler {
         return null;
     }
 
-    private void handleExitRoom(String username, long roomName) throws IOException {
+    private BaseGameResponse handleExitRoom(String username, long roomName) throws IOException {
         BaseGameResponse response = null;
         Room savedRoom = null;
         IUserService userService = applicationContext.getBean(UserService.class);
@@ -226,9 +212,9 @@ public class GameWebSocket extends TextWebSocketHandler {
                 }
             }
             if (response == null)
-                response = BaseGameResponse.bad(Config.GAME_MSG_TYPE_EXIT_ROOM, -102, "用户不在该房间中");
+                return BaseGameResponse.bad(Config.GAME_MSG_TYPE_EXIT_ROOM, -102, "用户不在该房间中");
         } else {
-            response = BaseGameResponse.bad(Config.GAME_MSG_TYPE_EXIT_ROOM, -101, "用户或房间数据不存在");
+            return BaseGameResponse.bad(Config.GAME_MSG_TYPE_EXIT_ROOM, -101, "用户或房间数据不存在");
         }
         String responseMsg = GameMessageJsonHelper.convertToJson(response);
         for (GameWebSocket item : webSocketSet) {
@@ -236,6 +222,7 @@ public class GameWebSocket extends TextWebSocketHandler {
         }
         if (savedRoom != null && savedRoom.getPlayers().size() == 0)
             gameService.destroyRoom(roomName);
+        return null;
     }
 
     private BaseGameResponse handleReady(String username, long roomName) throws IOException {
@@ -247,7 +234,7 @@ public class GameWebSocket extends TextWebSocketHandler {
         Room room = gameService.getRoomInfo(roomName);
         if (user != null && room != null) {
             if (username.equals(room.getOwnerName())) {
-                response = BaseGameResponse.bad(Config.GAME_MSG_TYPE_READY, -105, "房主无法准备");
+                return BaseGameResponse.bad(Config.GAME_MSG_TYPE_READY, -105, "房主无法准备");
             } else {
                 for (User u: room.getPlayers()) {
                     if (u != null && u.getUsername().equals(username)) {
@@ -289,6 +276,9 @@ public class GameWebSocket extends TextWebSocketHandler {
         User user = userService.getUserInfo(username);
         Room room = gameService.getRoomInfo(roomName);
         if (user != null && room != null) {
+            if (!username.equals(room.getOwnerName())) {
+                return BaseGameResponse.bad(Config.GAME_MSG_TYPE_START_GAME, -110, "不是房主，无法开始游戏");
+            }
             for (User u : room.getPlayers()) {
                 if (!u.getUsername().equals(room.getOwnerName()) && !u.isReady()) {
                     isAllReady = false;
@@ -301,7 +291,13 @@ public class GameWebSocket extends TextWebSocketHandler {
                     u.setReady(false);
                     userService.updateAndSaveUser(u);
                 }
-                response = BaseGameResponse.good(Config.GAME_MSG_TYPE_START_GAME, "");
+                Game game = gameService.initializeGame(roomName);
+                if (game == null) {
+                    return BaseGameResponse.bad(Config.GAME_MSG_TYPE_START_GAME, -107, "游戏创建失败");
+                }
+                else {
+                    response = BaseGameResponse.good(Config.GAME_MSG_TYPE_START_GAME, game);
+                }
             }
         } else {
             return BaseGameResponse.bad(Config.GAME_MSG_TYPE_START_GAME, -101, "用户或房间数据不存在");
@@ -313,6 +309,142 @@ public class GameWebSocket extends TextWebSocketHandler {
         return null;
     }
 
+    private BaseGameResponse handleTakeTurn(Game game) throws IOException {
+        System.out.println("===============处理回合=================");
+        if (game == null) {
+            System.out.println("游戏数据不存在");
+            return BaseGameResponse.bad(Config.GAME_MSG_TYPE_TAKE_TURN, -108, "游戏数据不存在");
+        } else {
+            BaseGameResponse response = null;
+            IQuestionService questionService = applicationContext.getBean(QuestionService.class);
+            IGameService gameService = applicationContext.getBean(GameService.class);
+            Player nextPlayer = null;
+            String name = null;
+            System.out.println("游戏里的玩家依次是：" + game.getPlayersOrder());
+            for (Player p : game.getPlayersOrder()) {
+                name = p.getUsername();
+                if (!game.findPlayer(name).isHasTakenTurn()) {
+                    nextPlayer = game.findPlayer(name);
+                    break;
+                }
+            }
+            if (nextPlayer == null) {
+                name = game.getPlayersOrder().get(0).getUsername();
+                nextPlayer = game.findPlayer(name);
+                List<Player> players = game.getPlayers();
+                List<Player> tempRemoveList = new ArrayList<>();
+                List<Player> tempAddList = new ArrayList<>();
+                for (Player p : players) {
+                    if (!p.getUsername().equals(nextPlayer.getUsername())) {
+                        tempRemoveList.add(p);
+                        p.setHasTakenTurn(false);
+                        tempAddList.add(p);
+                    }
+                }
+                game.getPlayers().removeAll(tempRemoveList);
+                game.getPlayers().addAll(tempAddList);
+            }
+            onGoingPlayer = nextPlayer;
+            System.out.println("下一个玩家是：" + nextPlayer.getUsername());
+            System.out.println("玩家所在位置：" + nextPlayer.getPosition());
+            System.out.println("题库中的题目数：" + game.getQuestions().size());
+            Question question = questionService.getRandomQuestion(game.getQuestions());
+            System.out.println("抽中的题目是：" + question);
+            onGoingQuestion = question;
+            TakeTurn takeTurn = new TakeTurn(nextPlayer.getUsername(), nextPlayer.isPrisoned(), question);
+
+            System.out.println("骰子结果是：" + takeTurn.getRollNum());
+            game.removePlayer(nextPlayer);
+            if (nextPlayer.isPrisoned()) {
+                System.out.println("现在是禁闭状态！");
+                nextPlayer.setPrisoned(false);
+                if (takeTurn.getRollNum() == 2 || takeTurn.getRollNum() == 4 || takeTurn.getRollNum() == 6) {
+                    System.out.println("结果是偶数，跳过回合，不能答题和前进！");
+                    takeTurn.setQuestion(null);
+                    onGoingQuestion = null;
+                } else {
+                    System.out.println("结果是奇数，解除禁闭，正常答题和前进！");
+                    nextPlayer.moveForward(takeTurn.getRollNum());
+                }
+                System.out.println("禁闭状态已经解除，现在是：" + nextPlayer.isPrisoned());
+            } else {
+                nextPlayer.moveForward(takeTurn.getRollNum());
+            }
+            System.out.println("现在的位置是：" + nextPlayer.getPosition());
+
+            nextPlayer.setHasTakenTurn(true);
+            game.addPlayer(nextPlayer);
+            gameService.saveGame(game);
+            System.out.println("游戏信息已保存");
+
+            response = BaseGameResponse.good(Config.GAME_MSG_TYPE_TAKE_TURN, takeTurn);
+            String responseMsg = GameMessageJsonHelper.convertToJson(response);
+            for (GameWebSocket item : webSocketSet) {
+                item.sendMessage(responseMsg);
+            }
+            return null;
+        }
+    }
+
+    private BaseGameResponse handleAnswer(String choice) throws IOException {
+        System.out.println("=====================处理问题=====================");
+        System.out.println("当前回答者：" + onGoingPlayer.getUsername());
+        System.out.println("当前问题：" + onGoingQuestion);
+        System.out.println("原金币：" + game.findPlayer(onGoingPlayer.getUsername()).getCoinCount());
+        System.out.println("原禁闭状态：" + game.findPlayer(onGoingPlayer.getUsername()).isPrisoned());
+        BaseGameResponse response;
+        if (onGoingQuestion == null) {
+            response = BaseGameResponse.good(Config.GAME_MSG_TYPE_ANSWER, "禁闭状态，无法答题");
+        } else {
+            IQuestionService questionService = applicationContext.getBean(QuestionService.class);
+            IGameService gameService = applicationContext.getBean(GameService.class);
+            Answer answer = questionService.attemptAnswer(onGoingQuestion, choice);
+            if (answer == null) {
+                return BaseGameResponse.bad(Config.GAME_MSG_TYPE_ANSWER, -100, "没有正在进行的题目或作答格式错误");
+            } else {
+                response = BaseGameResponse.good(Config.GAME_MSG_TYPE_ANSWER, answer);
+                game.removePlayer(onGoingPlayer);
+                if (answer.isCorrect()) {
+                    System.out.println("回答正确！金币+1！");
+                    onGoingPlayer.incrementCoinCount();
+                    if (onGoingPlayer.getCoinCount() >= 6) {
+                        System.out.println(onGoingPlayer.getUsername() + "有6个金币了！游戏结束了！");
+                        game.setStatus("over");
+                        game.setWinner(onGoingPlayer);
+                    }
+                } else {
+                    System.out.println("回答错误！关禁闭！");
+                    onGoingPlayer.setPrisoned(true);
+                }
+                game.addPlayer(onGoingPlayer);
+                gameService.saveGame(game);
+                System.out.println("现金币：" + game.findPlayer(onGoingPlayer.getUsername()).getCoinCount());
+                System.out.println("现禁闭状态：" + game.findPlayer(onGoingPlayer.getUsername()).isPrisoned());
+                System.out.println("游戏状态已保存");
+            }
+        }
+        String responseMsg = GameMessageJsonHelper.convertToJson(response);
+        for (GameWebSocket item : webSocketSet) {
+            item.sendMessage(responseMsg);
+        }
+        return null;
+    }
+
+    private BaseGameResponse handleGameOver(Game game) throws IOException {
+        BaseGameResponse response;
+        IGameService gameService = applicationContext.getBean(GameService.class);
+        if (!game.getStatus().equals("over") || game.getWinner() == null) {
+            return BaseGameResponse.bad(Config.GAME_MSG_TYPE_GAME_OVER, -109, "游戏还未结束");
+        } else {
+            gameService.afterGame(game);
+            response = BaseGameResponse.good(Config.GAME_MSG_TYPE_GAME_OVER, game);
+        }
+        String responseMsg = GameMessageJsonHelper.convertToJson(response);
+        for (GameWebSocket item : webSocketSet) {
+            item.sendMessage(responseMsg);
+        }
+        return null;
+    }
 
     /**
      * 发送消息
@@ -323,10 +455,5 @@ public class GameWebSocket extends TextWebSocketHandler {
     private void sendMessage(String message) throws IOException {
         this.session.getBasicRemote().sendText(message);
     }
-
-    private void answerCorrect(String choice, Player player, Question question) {
-
-    }
-
 
 }

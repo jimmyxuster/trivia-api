@@ -4,5 +4,5 @@ import com.dummy.trivia.db.model.Game;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 public interface GameRepository extends MongoRepository<Game, Long> {
-    public Game findByRoomName(String roomName);
+    public Game findByRoomName(long roomName);
 }

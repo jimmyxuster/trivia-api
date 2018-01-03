@@ -15,4 +15,8 @@ public class Config {
 
     public static final String GAME_MSG_TYPE_START_GAME = "startGame";
 
+    public static final String GAME_MSG_TYPE_TAKE_TURN = "takeTurn";
+
+    public static final String GAME_MSG_TYPE_GAME_OVER = "gameOver";
+
 }

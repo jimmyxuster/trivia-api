@@ -10,11 +10,11 @@ public interface IQuestionService {
 
     String getQuestionInfo(String id);
 
-    boolean correctlyAnswered(Player player, Question question);
+//    boolean correctlyAnswered(Player player, Question question);
 
     List<Question> getQuestionsOfType(String type);
 
     Question getRandomQuestion(List<Question> questions);
 
-    Answer attemptAnswer(String answer);
+    Answer attemptAnswer(Question question, String answer);
 }

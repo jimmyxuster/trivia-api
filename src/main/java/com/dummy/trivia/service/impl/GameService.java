@@ -124,6 +124,7 @@ public class GameService implements IGameService {
             //设置游戏的状态为"playing"、设置玩家、题库、房间号，并保存
             game.setStatus("playing");
             game.setPlayers(players);
+            game.setPlayersOrder(players);
             game.setQuestions(questions);
             game.setRoomName(roomName);
             Game savedGame = gameRepository.save(game);
@@ -263,9 +264,6 @@ public class GameService implements IGameService {
     //在游戏结束后执行
     @Override
     public void afterGame(Game game) {
-        if (!game.getStatus().equals("over")) {
-            return;
-        }
         //所有参与的玩家的总局数+1，经验+5
         System.out.println("给所有玩家发福利！");
         for (Player player : game.getPlayers()) {
@@ -301,5 +299,15 @@ public class GameService implements IGameService {
     @Override
     public Room saveRoom(Room room) {
         return roomRepository.save(room);
+    }
+
+    @Override
+    public Game getGame(long roomName) {
+        return gameRepository.findByRoomName(roomName);
+    }
+
+    @Override
+    public Game saveGame(Game game) {
+        return gameRepository.save(game);
     }
 }

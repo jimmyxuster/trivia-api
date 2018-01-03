@@ -9,7 +9,9 @@ public class Game extends BaseModel {
 
     @Expose
     private List<Player> players;
-    @Expose
+
+    private List<Player> playersOrder;
+
     private List<Question> questions;
     @Expose
     private String status;
@@ -31,8 +33,29 @@ public class Game extends BaseModel {
         this.players = players;
     }
 
+    public Player findPlayer(String name) {
+        for (Player p : this.getPlayers()) {
+            if (p.getUsername().equals(name)) {
+                return p;
+            }
+        }
+        return null;
+    }
+
     public void addPlayer(Player player) {
         players.add(player);
+    }
+
+    public void removePlayer(Player player) {
+        players.remove(player);
+    }
+
+    public List<Player> getPlayersOrder() {
+        return playersOrder;
+    }
+
+    public void setPlayersOrder(List<Player> playersOrder) {
+        this.playersOrder = playersOrder;
     }
 
     public String getStatus() {

@@ -28,10 +28,10 @@ public class QuestionService implements IQuestionService {
         return gson.toJson(question);
     }
 
-    @Override
-    public boolean correctlyAnswered(Player player, Question question) {
-        return true;
-    }
+//    @Override
+//    public boolean correctlyAnswered(Player player, Question question) {
+//        return true;
+//    }
 
     @Override
     public List<Question> getQuestionsOfType(String type) {
@@ -46,7 +46,7 @@ public class QuestionService implements IQuestionService {
     }
 
     @Override
-    public Answer attemptAnswer(String answer) {
+    public Answer attemptAnswer(Question onGoingQuestion, String answer) {
         if (onGoingQuestion == null || StringUtils.isEmpty(answer)) {
             return null;
         }
