@@ -9,7 +9,6 @@ import com.dummy.trivia.service.IGameService;
 import com.dummy.trivia.service.IPlayerService;
 import com.dummy.trivia.service.IQuestionService;
 import com.dummy.trivia.service.IUserService;
-import com.dummy.trivia.socket.GameWebSocket;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -34,6 +33,8 @@ public class GameService implements IGameService {
     IPlayerService playerService;
     @Autowired
     IQuestionService questionService;
+
+    private Game game;
 
     @Override
     public List<Room> getRooms() {
@@ -127,11 +128,15 @@ public class GameService implements IGameService {
             game.setPlayersOrder(players);
             game.setQuestions(questions);
             game.setRoomName(roomName);
-            Game savedGame = gameRepository.save(game);
-            if (savedGame != null)
-                return savedGame;
+            game = gameRepository.save(game);
+            if (game != null)
+                return game;
         }
         return null;
+    }
+
+    public Game getGame() {
+        return game;
     }
 
     //返回游戏是否满足结束条件
@@ -251,14 +256,15 @@ public class GameService implements IGameService {
 
     @Override
     public boolean answerCorrect(Question question, String message) {
-        GameWebSocket socket = new GameWebSocket();
-        String choice = "";
-        try {
-            choice = socket.onMessage(message);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return question.getAnswer().equals(choice);
+//        GameWebSocket socket = new GameWebSocket();
+//        String choice = "";
+//        try {
+//            choice = socket.onMessage(message);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        return question.getAnswer().equals(choice);
+        return false;
     }
 
     //在游戏结束后执行
