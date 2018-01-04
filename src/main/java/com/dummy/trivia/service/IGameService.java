@@ -38,5 +38,9 @@ public interface IGameService {
     Game getGame(long roomName);
 
     Game saveGame(Game game);
+
+    void destroyGame(Game game);
+
+    void incrementPlayerCoinCount(Player onGoingPlayer, Game game);
 //    void startGame(Game game);
 }

@@ -45,8 +45,6 @@ public class GameWebSocket extends TextWebSocketHandler {
     private String username;
     private long roomName;
     private Game game;
-//    private Question onGoingQuestion;
-//    private Player onGoingPlayer;
 
 
     /**
@@ -139,16 +137,8 @@ public class GameWebSocket extends TextWebSocketHandler {
                 String startGameUsername = json.get("username").getAsString();
                 long startGameRoomName = json.get("roomName").getAsLong();
                 setUsernameAndRoom(startGameUsername, startGameRoomName);
-                setNewestGame(startGameRoomName);
                 BaseGameResponse errorStartGame = handleStartGame(startGameUsername, startGameRoomName);
                 if (errorStartGame == null) {
-                    IGameService gameService = applicationContext.getBean(GameService.class);
-                    game = gameService.getGame(startGameRoomName);
-                    for (GameWebSocket item: webSocketSet) {
-                        if (item.roomName == roomName) {
-                            item.game = game;
-                        }
-                    }
                     return null;
                 } else {
                     return GameMessageJsonHelper.convertToJson(errorStartGame);
@@ -275,8 +265,12 @@ public class GameWebSocket extends TextWebSocketHandler {
         }
         String responseMsg = GameMessageJsonHelper.convertToJson(response);
         notifyPlayersInSameRoom(responseMsg);
-        if (savedRoom != null && savedRoom.getPlayers().size() == 0)
+        if (savedRoom != null && savedRoom.getPlayers().size() == 0) {
             gameService.destroyRoom(roomName);
+            if (game != null) {
+                gameService.destroyGame(game);
+            }
+        }
         return null;
     }
 
@@ -345,10 +339,14 @@ public class GameWebSocket extends TextWebSocketHandler {
                     userService.updateAndSaveUser(u);
                 }
                 game = gameService.initializeGame(roomName);
+                for (GameWebSocket socket: webSocketSet) {
+                    if (socket.roomName == roomName && roomName > 0) {
+                        socket.game = game;
+                    }
+                }
                 if (game == null) {
                     return BaseGameResponse.bad(Config.GAME_MSG_TYPE_START_GAME, -107, "游戏创建失败");
-                }
-                else {
+                } else {
                     response = BaseGameResponse.good(Config.GAME_MSG_TYPE_START_GAME, game);
                 }
             }
@@ -381,41 +379,29 @@ public class GameWebSocket extends TextWebSocketHandler {
                 }
             }
             if (nextPlayer == null) {
-                name = game.getPlayersOrder().get(0).getUsername();
-                nextPlayer = game.findPlayer(name);
                 List<Player> players = game.getPlayers();
-                List<Player> tempRemoveList = new ArrayList<>();
-                List<Player> tempAddList = new ArrayList<>();
-                for (Player p : players) {
-                    if (!p.getUsername().equals(nextPlayer.getUsername())) {
-                        tempRemoveList.add(p);
-                        p.setHasTakenTurn(false);
-                        tempAddList.add(p);
-                    }
+                for (Player p: players) {
+                    p.setHasTakenTurn(false);
                 }
-                game.getPlayers().removeAll(tempRemoveList);
-                game.getPlayers().addAll(tempAddList);
+                nextPlayer = game.getPlayersOrder().get(0);
+                game.getPlayersOrder().get(0).setHasTakenTurn(true);
             }
-//            onGoingPlayer = nextPlayer;
             game.setOnGoingPlayer(nextPlayer);
             System.out.println("下一个玩家是：" + nextPlayer.getUsername());
             System.out.println("玩家所在位置：" + nextPlayer.getPosition());
             System.out.println("题库中的题目数：" + game.getQuestions().size());
             Question question = questionService.getRandomQuestion(game.getQuestions());
             System.out.println("抽中的题目是：" + question);
-//            onGoingQuestion = question;
             game.setOnGoingQuestion(question);
             TakeTurn takeTurn = new TakeTurn(nextPlayer.getUsername(), nextPlayer.isPrisoned(), question);
 
             System.out.println("骰子结果是：" + takeTurn.getRollNum());
-            game.removePlayer(nextPlayer);
             if (nextPlayer.isPrisoned()) {
                 System.out.println("现在是禁闭状态！");
                 nextPlayer.setPrisoned(false);
                 if (takeTurn.getRollNum() == 2 || takeTurn.getRollNum() == 4 || takeTurn.getRollNum() == 6) {
                     System.out.println("结果是偶数，跳过回合，不能答题和前进！");
                     takeTurn.setQuestion(null);
-//                    onGoingQuestion = null;
                     game.setOnGoingQuestion(null);
                 } else {
                     System.out.println("结果是奇数，解除禁闭，正常答题和前进！");
@@ -428,8 +414,6 @@ public class GameWebSocket extends TextWebSocketHandler {
             System.out.println("现在的位置是：" + nextPlayer.getPosition());
 
             nextPlayer.setHasTakenTurn(true);
-            game.addPlayer(nextPlayer);
-            gameService.saveGame(game);
             System.out.println("游戏信息已保存");
 
             response = BaseGameResponse.good(Config.GAME_MSG_TYPE_TAKE_TURN, takeTurn);
@@ -458,7 +442,6 @@ public class GameWebSocket extends TextWebSocketHandler {
                 return BaseGameResponse.bad(Config.GAME_MSG_TYPE_ANSWER, -100, "没有正在进行的题目或作答格式错误");
             } else {
                 response = BaseGameResponse.good(Config.GAME_MSG_TYPE_ANSWER, answer);
-                game.removePlayer(onGoingPlayer);
                 if (answer.isCorrect()) {
                     System.out.println("回答正确！金币+1！");
                     onGoingPlayer.incrementCoinCount();
@@ -466,13 +449,12 @@ public class GameWebSocket extends TextWebSocketHandler {
                         System.out.println(onGoingPlayer.getUsername() + "有6个金币了！游戏结束了！");
                         game.setStatus("over");
                         game.setWinner(onGoingPlayer);
+                        handleGameOver(game);
                     }
                 } else {
                     System.out.println("回答错误！关禁闭！");
                     onGoingPlayer.setPrisoned(true);
                 }
-                game.addPlayer(onGoingPlayer);
-                gameService.saveGame(game);
                 System.out.println("现金币：" + game.findPlayer(onGoingPlayer.getUsername()).getCoinCount());
                 System.out.println("现禁闭状态：" + game.findPlayer(onGoingPlayer.getUsername()).isPrisoned());
                 System.out.println("游戏状态已保存");

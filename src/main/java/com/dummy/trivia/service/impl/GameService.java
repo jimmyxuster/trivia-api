@@ -10,6 +10,10 @@ import com.dummy.trivia.service.IPlayerService;
 import com.dummy.trivia.service.IQuestionService;
 import com.dummy.trivia.service.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -26,6 +30,8 @@ public class GameService implements IGameService {
     UserRepository userRepository;
     @Autowired
     QuestionRepository questionRepository;
+    @Autowired
+    MongoTemplate mongoTemplate;
 
     @Autowired
     IUserService userService;
@@ -164,6 +170,15 @@ public class GameService implements IGameService {
 //        }
 //        return true;
 //    }
+
+
+    @Override
+    public void incrementPlayerCoinCount(Player onGoingPlayer, Game game) {
+        Query query = new Query(new Criteria("_id").is(game.id).and("players.user.username").is(onGoingPlayer.getUsername()));
+        Update update = new Update();
+        update.inc("players.$.coinCount", 1);
+        mongoTemplate.updateFirst(query, update, Game.class);
+    }
 
     @Override
     public void startGame(Game game) {
@@ -315,5 +330,12 @@ public class GameService implements IGameService {
     @Override
     public Game saveGame(Game game) {
         return gameRepository.save(game);
+    }
+
+    @Override
+    public void destroyGame(Game game) {
+        if (game != null) {
+            gameRepository.delete(game);
+        }
     }
 }
