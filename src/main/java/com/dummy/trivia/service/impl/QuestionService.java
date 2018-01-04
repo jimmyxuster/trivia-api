@@ -1,6 +1,5 @@
 package com.dummy.trivia.service.impl;
 
-import com.dummy.trivia.db.model.Player;
 import com.dummy.trivia.db.model.Question;
 import com.dummy.trivia.db.model.game.Answer;
 import com.dummy.trivia.db.repository.QuestionRepository;

@@ -13,8 +13,6 @@ import com.dummy.trivia.service.impl.QuestionService;
 import com.dummy.trivia.service.impl.UserService;
 import com.dummy.trivia.util.GameMessageJsonHelper;
 import com.google.gson.JsonObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
@@ -326,6 +324,7 @@ public class GameWebSocket extends TextWebSocketHandler {
         for (GameWebSocket item : webSocketSet) {
             item.sendMessage(responseMsg);
         }
+        handleTakeTurn(game);
         return null;
     }
 
@@ -446,6 +445,9 @@ public class GameWebSocket extends TextWebSocketHandler {
         String responseMsg = GameMessageJsonHelper.convertToJson(response);
         for (GameWebSocket item : webSocketSet) {
             item.sendMessage(responseMsg);
+        }
+        if (onGoingPlayer.getCoinCount() < 6) {
+            handleTakeTurn(game);
         }
         return null;
     }

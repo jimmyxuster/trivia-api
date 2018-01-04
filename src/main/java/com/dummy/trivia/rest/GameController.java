@@ -50,7 +50,8 @@ public class GameController {
     @Secured({"ROLE_USER"})
     @RequestMapping(value = "/game/room", method = RequestMethod.POST)
     //创建房间，选择题目类型，并使当前用户成为房主，返回房间信息
-    public RestResponse createRoom(Room room, HttpServletRequest request) {
+    public RestResponse createRoom(@RequestBody Room room, HttpServletRequest request) {
+        System.out.println(room.toString());
         String currentUserName = AuthenticationUtil.getCurrentUserAuthentication(request).getName();
         String type = room.getQuestionType();
         room = gameService.createRoom(currentUserName, type);
