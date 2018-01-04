@@ -19,6 +19,10 @@ public class Game extends BaseModel {
     private Player winner;
     @Expose
     private long roomName;
+    @Expose
+    private Question onGoingQuestion;
+    @Expose
+    private Player onGoingPlayer;
 
     private int[] board;
 
@@ -90,6 +94,22 @@ public class Game extends BaseModel {
         this.roomName = roomName;
     }
 
+    public Question getOnGoingQuestion() {
+        return onGoingQuestion;
+    }
+
+    public void setOnGoingQuestion(Question onGoingQuestion) {
+        this.onGoingQuestion = onGoingQuestion;
+    }
+
+    public Player getOnGoingPlayer() {
+        return onGoingPlayer;
+    }
+
+    public void setOnGoingPlayer(Player onGoingPlayer) {
+        this.onGoingPlayer = onGoingPlayer;
+    }
+
     public int getPosition(Player player) {
         return player.getPosition();
     }
@@ -122,10 +142,12 @@ public class Game extends BaseModel {
     public String toString() {
         return "Game{" +
                 "players=" + players +
-                ", questions=" + questions +
+                ", playersOrder=" + playersOrder +
                 ", status='" + status + '\'' +
                 ", winner=" + winner +
-                ", roomName='" + roomName + '\'' +
+                ", roomName=" + roomName +
+                ", onGoingQuestion=" + onGoingQuestion +
+                ", onGoingPlayer=" + onGoingPlayer +
                 '}';
     }
 }

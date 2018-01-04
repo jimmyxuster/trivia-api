@@ -45,8 +45,8 @@ public class GameWebSocket extends TextWebSocketHandler {
     private String username;
     private long roomName;
     private Game game;
-    private Question onGoingQuestion;
-    private Player onGoingPlayer;
+//    private Question onGoingQuestion;
+//    private Player onGoingPlayer;
 
 
     /**
@@ -139,6 +139,7 @@ public class GameWebSocket extends TextWebSocketHandler {
                 String startGameUsername = json.get("username").getAsString();
                 long startGameRoomName = json.get("roomName").getAsLong();
                 setUsernameAndRoom(startGameUsername, startGameRoomName);
+                setNewestGame(startGameRoomName);
                 BaseGameResponse errorStartGame = handleStartGame(startGameUsername, startGameRoomName);
                 if (errorStartGame == null) {
                     IGameService gameService = applicationContext.getBean(GameService.class);
@@ -153,6 +154,9 @@ public class GameWebSocket extends TextWebSocketHandler {
                     return GameMessageJsonHelper.convertToJson(errorStartGame);
                 }
             case "takeTurn":
+                System.out.println("当前roomName：" + roomName);
+                setNewestGame(roomName);
+                System.out.println("Game:" + game);
                 BaseGameResponse takeTurnResponse = handleTakeTurn(game);
                 return takeTurnResponse == null ? null : GameMessageJsonHelper.convertToJson(takeTurnResponse);
             case "answer":
@@ -392,13 +396,15 @@ public class GameWebSocket extends TextWebSocketHandler {
                 game.getPlayers().removeAll(tempRemoveList);
                 game.getPlayers().addAll(tempAddList);
             }
-            onGoingPlayer = nextPlayer;
+//            onGoingPlayer = nextPlayer;
+            game.setOnGoingPlayer(nextPlayer);
             System.out.println("下一个玩家是：" + nextPlayer.getUsername());
             System.out.println("玩家所在位置：" + nextPlayer.getPosition());
             System.out.println("题库中的题目数：" + game.getQuestions().size());
             Question question = questionService.getRandomQuestion(game.getQuestions());
             System.out.println("抽中的题目是：" + question);
-            onGoingQuestion = question;
+//            onGoingQuestion = question;
+            game.setOnGoingQuestion(question);
             TakeTurn takeTurn = new TakeTurn(nextPlayer.getUsername(), nextPlayer.isPrisoned(), question);
 
             System.out.println("骰子结果是：" + takeTurn.getRollNum());
@@ -409,7 +415,8 @@ public class GameWebSocket extends TextWebSocketHandler {
                 if (takeTurn.getRollNum() == 2 || takeTurn.getRollNum() == 4 || takeTurn.getRollNum() == 6) {
                     System.out.println("结果是偶数，跳过回合，不能答题和前进！");
                     takeTurn.setQuestion(null);
-                    onGoingQuestion = null;
+//                    onGoingQuestion = null;
+                    game.setOnGoingQuestion(null);
                 } else {
                     System.out.println("结果是奇数，解除禁闭，正常答题和前进！");
                     nextPlayer.moveForward(takeTurn.getRollNum());
@@ -433,11 +440,13 @@ public class GameWebSocket extends TextWebSocketHandler {
     }
 
     private BaseGameResponse handleAnswer(String choice) throws IOException {
+        Player onGoingPlayer = game.getOnGoingPlayer();
+        Question onGoingQuestion = game.getOnGoingQuestion();
         System.out.println("=====================处理问题=====================");
         System.out.println("当前回答者：" + onGoingPlayer.getUsername());
         System.out.println("当前问题：" + onGoingQuestion);
-        System.out.println("原金币：" + game.findPlayer(onGoingPlayer.getUsername()).getCoinCount());
-        System.out.println("原禁闭状态：" + game.findPlayer(onGoingPlayer.getUsername()).isPrisoned());
+        System.out.println("原金币：" + onGoingPlayer.getCoinCount());
+        System.out.println("原禁闭状态：" + onGoingPlayer.isPrisoned());
         BaseGameResponse response;
         if (onGoingQuestion == null) {
             response = BaseGameResponse.good(Config.GAME_MSG_TYPE_ANSWER, "禁闭状态，无法答题");
@@ -505,5 +514,10 @@ public class GameWebSocket extends TextWebSocketHandler {
     private void setUsernameAndRoom(String username, long room) {
         this.username = username;
         this.roomName = room;
+    }
+
+    private void setNewestGame(long roomName) {
+        IGameService gameService = applicationContext.getBean(GameService.class);
+        this.game = gameService.getGame(roomName);
     }
 }
