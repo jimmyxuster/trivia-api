@@ -143,6 +143,11 @@ public class GameWebSocket extends TextWebSocketHandler {
                 if (errorStartGame == null) {
                     IGameService gameService = applicationContext.getBean(GameService.class);
                     game = gameService.getGame(startGameRoomName);
+                    for (GameWebSocket item: webSocketSet) {
+                        if (item.roomName == roomName) {
+                            item.game = game;
+                        }
+                    }
                     return null;
                 } else {
                     return GameMessageJsonHelper.convertToJson(errorStartGame);
@@ -160,17 +165,49 @@ public class GameWebSocket extends TextWebSocketHandler {
             case "gameOver":
                 BaseGameResponse gameOverResponse = handleGameOver(game);
                 return gameOverResponse == null ? null : GameMessageJsonHelper.convertToJson(gameOverResponse);
+            case "diceGo":
+                BaseGameResponse diceGoError = handleDiceGo(game);
+                return diceGoError == null ? null : GameMessageJsonHelper.convertToJson(diceGoError);
             default:
                 handleUnknown();
                 return null;
         }
     }
 
+    /**
+     * 处理掷骰子事件
+     * @param game
+     * @return
+     */
+    private BaseGameResponse handleDiceGo(Game game) {
+        if (game != null && username != null) {
+            try {
+                notifyPlayersInSameRoom(GameMessageJsonHelper.convertToJson(BaseGameResponse.good(Config.GAME_MSG_TYPE_DICE_GO, username)));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            return BaseGameResponse.bad(Config.GAME_MSG_TYPE_DICE_GO, -200, "状态异常");
+        }
+        return null;
+    }
+
     private void handleUnknown() throws IOException {
         BaseGameResponse response = BaseGameResponse.bad(Config.GAME_MSG_TYPE_UNKNOWN, -200, "无法解析的消息类型");
         String responseMsg = GameMessageJsonHelper.convertToJson(response);
+        notifyPlayersInSameRoom(responseMsg);
+    }
+
+    /**
+     * 通知同房间（游戏）内所有玩家
+     * @param responseMsg 消息内容
+     * @throws IOException
+     */
+    private void notifyPlayersInSameRoom(String responseMsg) throws IOException {
         for (GameWebSocket item : webSocketSet) {
-            item.sendMessage(responseMsg);
+            if (item.roomName > 0 && item.roomName == roomName) {
+                item.sendMessage(responseMsg);
+            }
         }
     }
 
@@ -201,9 +238,7 @@ public class GameWebSocket extends TextWebSocketHandler {
             return BaseGameResponse.bad(Config.GAME_MSG_TYPE_JOIN_ROOM, -101, "用户或房间数据不存在");
         }
         String responseMsg = GameMessageJsonHelper.convertToJson(response);
-        for (GameWebSocket item : webSocketSet) {
-            item.sendMessage(responseMsg);
-        }
+        notifyPlayersInSameRoom(responseMsg);
         return null;
     }
 
@@ -235,9 +270,7 @@ public class GameWebSocket extends TextWebSocketHandler {
             return BaseGameResponse.bad(Config.GAME_MSG_TYPE_EXIT_ROOM, -101, "用户或房间数据不存在");
         }
         String responseMsg = GameMessageJsonHelper.convertToJson(response);
-        for (GameWebSocket item : webSocketSet) {
-            item.sendMessage(responseMsg);
-        }
+        notifyPlayersInSameRoom(responseMsg);
         if (savedRoom != null && savedRoom.getPlayers().size() == 0)
             gameService.destroyRoom(roomName);
         return null;
@@ -280,9 +313,7 @@ public class GameWebSocket extends TextWebSocketHandler {
             return BaseGameResponse.bad(Config.GAME_MSG_TYPE_READY, -101, "用户或房间数据不存在");
         }
         String responseMsg = GameMessageJsonHelper.convertToJson(response);
-        for (GameWebSocket item : webSocketSet) {
-            item.sendMessage(responseMsg);
-        }
+        notifyPlayersInSameRoom(responseMsg);
         return null;
     }
 
@@ -309,7 +340,7 @@ public class GameWebSocket extends TextWebSocketHandler {
                     u.setReady(false);
                     userService.updateAndSaveUser(u);
                 }
-                Game game = gameService.initializeGame(roomName);
+                game = gameService.initializeGame(roomName);
                 if (game == null) {
                     return BaseGameResponse.bad(Config.GAME_MSG_TYPE_START_GAME, -107, "游戏创建失败");
                 }
@@ -321,9 +352,7 @@ public class GameWebSocket extends TextWebSocketHandler {
             return BaseGameResponse.bad(Config.GAME_MSG_TYPE_START_GAME, -101, "用户或房间数据不存在");
         }
         String responseMsg = GameMessageJsonHelper.convertToJson(response);
-        for (GameWebSocket item : webSocketSet) {
-            item.sendMessage(responseMsg);
-        }
+        notifyPlayersInSameRoom(responseMsg);
         handleTakeTurn(game);
         return null;
     }
@@ -398,9 +427,7 @@ public class GameWebSocket extends TextWebSocketHandler {
 
             response = BaseGameResponse.good(Config.GAME_MSG_TYPE_TAKE_TURN, takeTurn);
             String responseMsg = GameMessageJsonHelper.convertToJson(response);
-            for (GameWebSocket item : webSocketSet) {
-                item.sendMessage(responseMsg);
-            }
+            notifyPlayersInSameRoom(responseMsg);
             return null;
         }
     }
@@ -443,9 +470,7 @@ public class GameWebSocket extends TextWebSocketHandler {
             }
         }
         String responseMsg = GameMessageJsonHelper.convertToJson(response);
-        for (GameWebSocket item : webSocketSet) {
-            item.sendMessage(responseMsg);
-        }
+        notifyPlayersInSameRoom(responseMsg);
         if (onGoingPlayer.getCoinCount() < 6) {
             handleTakeTurn(game);
         }
@@ -462,9 +487,7 @@ public class GameWebSocket extends TextWebSocketHandler {
             response = BaseGameResponse.good(Config.GAME_MSG_TYPE_GAME_OVER, game);
         }
         String responseMsg = GameMessageJsonHelper.convertToJson(response);
-        for (GameWebSocket item : webSocketSet) {
-            item.sendMessage(responseMsg);
-        }
+        notifyPlayersInSameRoom(responseMsg);
         return null;
     }
 

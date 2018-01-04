@@ -19,4 +19,5 @@ public class Config {
 
     public static final String GAME_MSG_TYPE_GAME_OVER = "gameOver";
 
+    public static final String GAME_MSG_TYPE_DICE_GO = "diceGo";
 }
