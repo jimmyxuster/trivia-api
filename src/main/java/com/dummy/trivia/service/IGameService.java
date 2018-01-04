@@ -34,5 +34,9 @@ public interface IGameService {
     void afterGame(Game game);
 
     Room saveRoom(Room room);
+
+    Game getGame(long roomName);
+
+    Game saveGame(Game game);
 //    void startGame(Game game);
 }

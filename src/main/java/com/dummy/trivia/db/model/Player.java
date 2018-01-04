@@ -18,10 +18,11 @@ public class Player {
     @Expose
     private int position = 0;
 
+    @Expose
+    private boolean hasTakenTurn = false;
+
     public Player(User user) {
         this.user = user;
-        this.coinCount = 0;
-        this.isPrisoned = false;
         this.position = generateRandomInt(0, Game.BOARD_SIZE - 1);
     }
 
@@ -65,6 +66,18 @@ public class Player {
         this.position = position;
     }
 
+    public void moveForward(int step) {
+        this.setPosition((this.getPosition() + step) % Game.BOARD_SIZE);
+    }
+
+    public boolean isHasTakenTurn() {
+        return hasTakenTurn;
+    }
+
+    public void setHasTakenTurn(boolean hasTakenTurn) {
+        this.hasTakenTurn = hasTakenTurn;
+    }
+
     public int generateRandomInt(int min, int max) {
         Random random = new Random();
         return random.nextInt(max) % (max - min + 1) + min;
@@ -77,6 +90,7 @@ public class Player {
                 ", coinCount=" + coinCount +
                 ", isPrisoned=" + isPrisoned +
                 ", position=" + position +
+                ", hasTakenTurn=" + hasTakenTurn +
                 '}';
     }
 }

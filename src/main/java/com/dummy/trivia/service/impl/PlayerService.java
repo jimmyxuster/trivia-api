@@ -56,5 +56,4 @@ public class PlayerService implements IPlayerService {
     public void incrementCoinCount(Player player) {
         player.incrementCoinCount();
     }
-
 }

@@ -7,10 +7,13 @@ public class Answer {
     private String chosen;
     @Expose
     private String key;
+    @Expose
+    private boolean isCorrect;
 
     public Answer(String chosen, String key) {
         this.chosen = chosen;
         this.key = key;
+        this.isCorrect = (chosen.equalsIgnoreCase(key));
     }
 
     public String getChosen() {
@@ -27,6 +30,10 @@ public class Answer {
 
     public void setKey(String key) {
         this.key = key;
+    }
+
+    public boolean isCorrect() {
+        return isCorrect;
     }
 
     public boolean isCorrectAnswered() {
