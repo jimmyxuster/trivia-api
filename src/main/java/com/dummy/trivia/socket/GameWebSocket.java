@@ -44,10 +44,10 @@ public class GameWebSocket extends TextWebSocketHandler {
 
     private String username;
     private long roomName;
-
     private Game game;
     private Question onGoingQuestion;
     private Player onGoingPlayer;
+
 
     /**
      * 获取在线人数
@@ -476,10 +476,6 @@ public class GameWebSocket extends TextWebSocketHandler {
      */
     private void sendMessage(String message) throws IOException {
         this.session.getBasicRemote().sendText(message);
-    }
-
-    private void answerCorrect(String choice, Player player, Question question) {
-
     }
 
 
