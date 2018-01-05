@@ -119,14 +119,6 @@ public class GameWebSocket extends TextWebSocketHandler {
                     return GameMessageJsonHelper.convertToJson(joinResponse);
                 }
                 return null;
-            case "exitRoom":
-                String exitUsername = json.get("username").getAsString();
-                long exitRoomName = json.get("roomName").getAsLong();
-                BaseGameResponse exitResponse = handleExitRoom(exitUsername, exitRoomName);
-                if (exitResponse != null) {
-                    return GameMessageJsonHelper.convertToJson(exitResponse);
-                }
-                return null;
             case "ready":
                 String readyUsername = json.get("username").getAsString();
                 long readyRoomName = json.get("roomName").getAsLong();
@@ -145,8 +137,6 @@ public class GameWebSocket extends TextWebSocketHandler {
                 }
             case "takeTurn":
                 System.out.println("当前roomName：" + roomName);
-                setNewestGame(roomName);
-                System.out.println("Game:" + game);
                 BaseGameResponse takeTurnResponse = handleTakeTurn(game);
                 return takeTurnResponse == null ? null : GameMessageJsonHelper.convertToJson(takeTurnResponse);
             case "answer":
@@ -367,7 +357,6 @@ public class GameWebSocket extends TextWebSocketHandler {
         } else {
             BaseGameResponse response = null;
             IQuestionService questionService = applicationContext.getBean(QuestionService.class);
-            IGameService gameService = applicationContext.getBean(GameService.class);
             Player nextPlayer = null;
             String name = null;
             System.out.println("游戏里的玩家依次是：" + game.getPlayersOrder());
@@ -496,10 +485,5 @@ public class GameWebSocket extends TextWebSocketHandler {
     private void setUsernameAndRoom(String username, long room) {
         this.username = username;
         this.roomName = room;
-    }
-
-    private void setNewestGame(long roomName) {
-        IGameService gameService = applicationContext.getBean(GameService.class);
-        this.game = gameService.getGame(roomName);
     }
 }
