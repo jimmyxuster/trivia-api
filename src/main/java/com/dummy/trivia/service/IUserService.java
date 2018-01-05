@@ -1,8 +1,7 @@
 package com.dummy.trivia.service;
 
+import com.dummy.trivia.db.model.ChangePasswordBean;
 import com.dummy.trivia.db.model.User;
-
-import java.util.List;
 
 public interface IUserService {
 
@@ -15,4 +14,6 @@ public interface IUserService {
 //    List<User> getReadyUsers();
 
     int getLevelByExp(int exp);
+
+    User changePassword(User user, ChangePasswordBean bean);
 }

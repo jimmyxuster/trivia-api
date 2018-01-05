@@ -1,11 +1,12 @@
 package com.dummy.trivia.service.impl;
 
+import com.dummy.trivia.db.model.ChangePasswordBean;
 import com.dummy.trivia.db.model.User;
 import com.dummy.trivia.db.repository.UserRepository;
 import com.dummy.trivia.service.IUserService;
 import com.dummy.trivia.util.FileUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -17,11 +18,12 @@ import java.util.List;
 @Service
 public class UserService implements IUserService {
 
-    private static final BCryptPasswordEncoder ENCODER = new BCryptPasswordEncoder(4);
     public static final String AVATAR_ROOT = "avatar-dir";
 
     @Autowired
     UserRepository userRepository;
+    @Autowired
+    PasswordEncoder bcryptPasswordEncoder;
 
     @Override
     public User getUserInfo(String username) {
@@ -29,8 +31,17 @@ public class UserService implements IUserService {
     }
 
     @Override
+    public User changePassword(User user, ChangePasswordBean bean) {
+        if (bcryptPasswordEncoder.matches(bean.getOldPassword(), user.getPassword())) {
+            user.setPassword(bcryptPasswordEncoder.encode(bean.getNewPassword()));
+            return userRepository.save(user);
+        }
+        return null;
+    }
+
+    @Override
     public User saveUser(User user) {
-        user.setPassword(ENCODER.encode(user.getPassword()));
+        user.setPassword(bcryptPasswordEncoder.encode(user.getPassword()));
         List<String> roles = new ArrayList<>();
         roles.add("ROLE_USER");
         user.setRoles(roles);
