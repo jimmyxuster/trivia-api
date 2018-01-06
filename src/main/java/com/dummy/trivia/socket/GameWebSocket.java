@@ -152,6 +152,12 @@ public class GameWebSocket extends TextWebSocketHandler {
             case "diceGo":
                 BaseGameResponse diceGoError = handleDiceGo(game);
                 return diceGoError == null ? null : GameMessageJsonHelper.convertToJson(diceGoError);
+            case "chat":
+                String username = json.get("username").getAsString();
+                String content = json.get("content").getAsString();
+                notifyPlayersInSameRoom(GameMessageJsonHelper.convertToJson(BaseGameResponse.good("chat",
+                        new ChatItem(username, content))));
+                return null;
             default:
                 handleUnknown();
                 return null;
@@ -439,6 +445,7 @@ public class GameWebSocket extends TextWebSocketHandler {
                         game.setStatus("over");
                         game.setWinner(onGoingPlayer);
                         handleGameOver(game);
+                        return null;
                     }
                 } else {
                     System.out.println("回答错误！关禁闭！");
