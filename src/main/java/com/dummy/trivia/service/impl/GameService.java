@@ -123,10 +123,8 @@ public class GameService implements IGameService {
 
             Game game = null;
             //如果game已经存在则查找，否则新建
-            if (gameRepository.findOne(roomName) == null) {
+            if ((game = gameRepository.findOne(roomName)) == null) {
                 game = new Game();
-            } else {
-                game = gameRepository.findOne(roomName);
             }
             //设置游戏的状态为"playing"、设置玩家、题库、房间号，并保存
             game.setStatus("playing");
@@ -289,31 +287,21 @@ public class GameService implements IGameService {
         System.out.println("给所有玩家发福利！");
         for (Player player : game.getPlayers()) {
             System.out.println("=====================\n玩家：" + player.getUsername());
-            User playerUser = userRepository.findByUsername(player.getUsername());
-            System.out.println("原总局数：" + playerUser.getTotalPlay());
-            System.out.println("原胜利数：" + playerUser.getWinCount());
-            System.out.println("原经验值：" + playerUser.getExp());
 
-            playerUser.incrementTotalPlay();
-            playerUser.incrementExpBy(5);
-            userRepository.save(playerUser);
+            player.getUser().incrementTotalPlay();
+            player.getUser().incrementExpBy(5);
+            if (player.getUsername().equals(game.getWinner().getUsername())) {
+                player.getUser().incrementWinCount();
+                player.getUser().incrementExpBy(5);
+            }
+            userRepository.save(player.getUser());
 
-            System.out.println("现总局数：" + playerUser.getTotalPlay());
-            System.out.println("现胜利数：" + playerUser.getWinCount());
-            System.out.println("现经验值：" + playerUser.getExp());
         }
         //winner的胜场+1，经验额外+5
         Player winner = game.getWinner();
         System.out.println("给赢家发福利！");
         if (winner != null) {
             System.out.println("======================\n赢家是：" + winner.getUsername() + "!!!");
-            User winnerUser = userRepository.findByUsername(winner.getUsername());
-            winnerUser.incrementWinCount();
-            winnerUser.incrementExpBy(5);
-            userRepository.save(winnerUser);
-            System.out.println("现总局数：" + winnerUser.getTotalPlay());
-            System.out.println("现胜利数：" + winnerUser.getWinCount());
-            System.out.println("现经验值：" + winnerUser.getExp());
         }
     }
 
