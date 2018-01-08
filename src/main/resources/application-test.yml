@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://106.15.229.43:3306/trivia
+    username: jimmy
+    password: Trivia_12345
+  jpa:
+    database: mysql
+    show-sql: true
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+  data:
+    mongodb:
+      uri: mongodb://jimmy:asswecan12345@106.15.229.43:27017/trivia
+
+server:
+  port: 8080
