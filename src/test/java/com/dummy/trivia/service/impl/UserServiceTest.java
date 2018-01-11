@@ -110,9 +110,17 @@ public class UserServiceTest {
 
     @After
     public void destroyTestUser() {
-        User user = userRepository.findByUsername("testname");
-        if (user != null) {
-            userRepository.delete(user);
+        User testname = userRepository.findByUsername("testname");
+        User saveUserTest = userRepository.findByUsername("saveUserTest");
+        User saveUserTest2 = userRepository.findByUsername("saveUserTest2");
+        if (testname != null) {
+            userRepository.delete(testname);
+        }
+        if (saveUserTest != null) {
+            userRepository.delete(saveUserTest);
+        }
+        if (saveUserTest2 != null) {
+            userRepository.delete(saveUserTest2);
         }
     }
 
